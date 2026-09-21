@@ -106,6 +106,24 @@ async function scrapeSingleArticle(articleUrl) {
       return { status: 'skipped', heading, filename: safeFilename };
     }
 
+    // Category
+    let category = $('meta[property="article:section"]').attr('content') || 
+                   $('meta[name="section"]').attr('content') || 
+                   $('meta[property="og:section"]').attr('content') || 
+                   $('.breadcrumb a, .breadcrumb-item').eq(1).text().trim() || '';
+
+    // Fallback category from URL pathname if meta tag is empty
+    if (!category) {
+      try {
+        const pathSegments = new URL(articleUrl).pathname.split('/').filter(Boolean);
+        if (pathSegments.length > 0) {
+          const seg = pathSegments[0] === 'news' && pathSegments[1] ? pathSegments[1] : pathSegments[0];
+          category = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/[-_]/g, ' ');
+        }
+      } catch (e) {}
+    }
+    if (!category) category = 'General';
+
     // Photo
     let photo = $('meta[property="og:image"]').attr('content') || 
                 $('meta[name="twitter:image"]').attr('content') || 
@@ -138,6 +156,7 @@ async function scrapeSingleArticle(articleUrl) {
     // Readable text content
     let readableText = `==========================================================\n`;
     readableText += `📰 HEADING:\n${heading}\n\n`;
+    readableText += `🏷️ CATEGORY: ${category}\n`;
     readableText += `📸 PHOTO URL:\n${photo}\n\n`;
     if (author) readableText += `✍️ AUTHOR: ${author}\n`;
     if (date) readableText += `📅 DATE: ${date}\n`;
@@ -152,6 +171,7 @@ async function scrapeSingleArticle(articleUrl) {
     fs.writeFileSync(jsonFilePath, JSON.stringify({
       url: articleUrl,
       heading,
+      category,
       photo,
       author,
       date,
@@ -165,7 +185,7 @@ async function scrapeSingleArticle(articleUrl) {
     // Record URL in master history registry
     recordInHistory(articleUrl);
 
-    return { status: 'saved', heading, photo, paragraphsCount: paragraphs.length, filename: `${today}/${safeFilename}` };
+    return { status: 'saved', heading, category, photo, paragraphsCount: paragraphs.length, filename: `${today}/${safeFilename}` };
   } catch (err) {
     return null;
   }
@@ -334,7 +354,7 @@ async function crawlAllArticles(baseUrl, concurrency = 5) {
           console.log(`${progress} ⏩ Skipped (already exists): "${result.heading.slice(0, 48)}..."`);
           skippedCount++;
         } else {
-          console.log(`${progress} ✅ [SAVED]: "${result.heading.slice(0, 48)}..." (${result.paragraphsCount} paras)`);
+          console.log(`${progress} ✅ [SAVED] [${result.category}]: "${result.heading.slice(0, 42)}..." (${result.paragraphsCount} paras)`);
           savedCount++;
         }
       } else {
