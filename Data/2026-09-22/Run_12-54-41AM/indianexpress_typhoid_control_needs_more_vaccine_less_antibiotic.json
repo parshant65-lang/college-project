@@ -1,0 +1,21 @@
+{
+  "source": "Indian Express",
+  "url": "https://indianexpress.com/article/opinion/columns/india-typhoid-cases-vaccine-antibiotic-resistance-10856174/",
+  "heading": "Typhoid control needs more vaccine, less antibiotic",
+  "category": "Opinion",
+  "photo": "https://images.indianexpress.com/2026/08/injection-image_20260830192109.jpg",
+  "author": "",
+  "date": "2026-08-31T06:32:36+05:30",
+  "totalParagraphs": 9,
+  "paragraphs": [
+    "Everyone is talking about increasing influenza and swine flu cases. Another disease where cases are unobtrusively mounting is typhoid. This should concern us, not simply because typhoid remains a common infection, but because every suspected case can become a trigger for inappropriate or unnecessarily broad-spectrum antibiotic use.",
+    "Typhoid presents a particularly difficult paradox. It is a vaccine-preventable bacterial disease, yet in India we continue to diagnose it imperfectly and treat it empirically. The fundamental problem is the absence of a simple, reliable, accessible diagnostic test. A single Widal test is not sufficient to establish a diagnosis of acute typhoid. In an endemic country such as India, background antibodies and previous exposure or vaccination can make interpretation difficult. Yet, in routine practice, a positive Widal result may still be treated as confirmation of typhoid.",
+    "Blood culture remains the conventional laboratory standard, but it too has limitations. The WHO’s latest typhoid guidance notes that the sensitivity of a single blood culture is only around 55-60 per cent, with yield influenced by the volume of blood collected and, critically, prior antimicrobial exposure. This creates a vicious cycle: A patient develops prolonged fever, takes an antibiotic before seeking care, undergoes blood culture, and receives a negative result. The clinician is left with suspicion but no microbiological confirmation — and may respond by escalating or changing antibiotics.",
+    "The result is an antimicrobial-resistance (AMR) problem. In a country already struggling with increasing resistance to Salmonella typhi, every unnecessary antibiotic course creates additional selection pressure, while every missed diagnosis undermines surveillance of resistance patterns. But there is another question we should be asking: Why are we trying to solve a vaccine-preventable disease primarily through antibiotics? India is one of the countries where the case for typhoid vaccination is compelling. The WHO has prioritised typhoid-conjugate vaccine (TCV) introduction in countries with high disease-burden or high AMR levels. India produced the world’s first WHO-prequalified TCV, Typbar-TCV, in 2017. Since then, additional Indian TCV products have achieved WHO prequalification. The scientific and manufacturing capability exists. The vaccine exists. What remains inadequate is the scale and rigour of use.",
+    "Vaccination should not be viewed as a substitute for clean water, sanitation, food safety or better diagnostics. It must be part of an integrated typhoid-control strategy.",
+    "First, reports of increasing typhoid should trigger strengthened surveillance. Hospitals and laboratories should systematically document suspected and culture-confirmed cases, antimicrobial susceptibility patterns and prior antibiotic exposure.",
+    "Second, diagnostic stewardship needs to become part of antimicrobial stewardship. Blood cultures should ideally be obtained before antibiotics are started, with adequate blood volume and appropriate laboratory practices. India also needs investment in a better point-of-care or rapid diagnostic test for typhoid. We also need to revisit the place of TCV in our public-health strategy.",
+    "We should respond to the rising typhoid cases with better diagnostics, stronger surveillance, responsible antimicrobial use and, above all, prevention. India should not have to choose between better diagnosis and vaccination. It needs both.",
+    "The writer is senior scientist and programme officer, AMR, ICMR"
+  ]
+}

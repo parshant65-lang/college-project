@@ -1,0 +1,31 @@
+{
+  "source": "LiveMint",
+  "url": "https://www.livemint.com/ai/another-rogue-ai-incident-google-says-its-gemini-model-hacked-three-other-companies-11789786426060.html",
+  "heading": "Another 'rogue' AI incident? Google says its Gemini model hacked three other companies | Mint",
+  "category": "AI",
+  "photo": "https://www.livemint.com/lm-img/img/2026/09/19/1600x900/maxresdefault_1789827637735_vgwK_1789827643004_wIJf_d10e2060-8051-455a-b88e-71043ed38bcf_zL8Q.jpg",
+  "author": "Prabhakar Jha",
+  "date": "2026-09-19T08:49:47+05:30",
+  "totalParagraphs": 19,
+  "paragraphs": [
+    "Google's Gemini AI model accessed the internet and breached the systems of three companies during a cybersecurity test in May, marking the first known instance of the company's AI systems autonomously carrying out such activity, Reuters reported.",
+    "The incidents took place during a cybersecurity evaluation conducted by Irregular, an independent firm that tests AI systems for security capabilities.",
+    "Heather Adkins, Google's vice president of security engineering, said Gemini came across publicly available information online and used guessed credentials to gain access to three websites that it believed were within the scope of the test.",
+    "\"We ensured the three entities were made aware, and we worked with our training partner on the changes they've now made to their testing processes,\" Adkins said.",
+    "\"These events highlight the importance of training powerful AI models to act responsibly,\" she added.",
+    "According to the Wall Street Journal, which first reported the incident, Gemini used different methods to obtain access in the three cases.",
+    "In one instance, the model repeatedly guessed passwords until it accessed a protected system. In the other two, it discovered credentials in a public repository and used them to enter protected systems.",
+    "Adkins said Gemini stopped its hacking activity in all three instances.",
+    "An Irregular spokesperson said the incident involved the same issue that had affected other AI companies and that all relevant labs were informed in late July.",
+    "\"All known issues on our end were remedied and resolved weeks ago,\" the spokesperson said.",
+    "The incident involving Gemini follows disclosures of similar cases involving Meta, Anthropic and OpenAI that were linked to Irregular.",
+    "Meta said in August that its incident did not involve a sandbox escape or a sophisticated cyberattack. Irregular has also said it was working on best practices for conducting AI cybersecurity evaluations securely.",
+    "The incidents come as AI agents are becoming increasingly capable of operating autonomously and accessing online resources and computer systems.",
+    "The developments have raised questions about the safeguards required to prevent increasingly autonomous AI systems from taking actions beyond the intended scope of cybersecurity tests.",
+    "Prabhakar Jha is a journalist and digital news editor with nearly a decade of experience in online media, specialising in breaking news, politics, national affairs. Having built his career across fast-paced digital newsrooms, he has developed a reputation for delivering accurate, timely, and reader-friendly stories while leading editorial teams during high-pressure news cycles. In 2026, he joined LiveMint as a Digital Content Producer. <br><br> A postgraduate in History from the University of Delhi, Prabhakar combines strong editorial judgment with a keen interest in public policy, governance, economics, and global affairs. Before joining LiveMint, he worked with leading digital publications, including News9Live and The Times of India, where he handled breaking news, copy editing, headline writing, live coverage, and newsroom coordination. <br><br> Beyond the newsroom, Prabhakar is passionate about long-form writing and storytelling. He has a particular interest in global affairs. An avid reader with a love for literary fiction, he also enjoys blogging, poetry, and working on creative writing projects.",
+    "Catch all the Business News, Market News, Breaking News Events and Latest News Updates on Live Mint. Download The Mint News App to get Daily Market Updates.",
+    "Download the Mint app and read premium stories",
+    "Log in to our website to save your bookmarks. It'll just take a moment.",
+    "Oops! Looks like you have exceeded the limit to bookmark the image. Remove some to bookmark this image."
+  ]
+}

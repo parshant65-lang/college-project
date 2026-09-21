@@ -1,0 +1,31 @@
+{
+  "source": "NDTV",
+  "url": "https://www.ndtv.com/artificial-intelligence/google-deepmind-agi-staffer-quits-ai-immense-harm-anthropic-resignation-12047432",
+  "heading": "'Immense Harm In 5 Years': Google's AI Researcher Quits With Stark Warning",
+  "category": "Artificial Intelligence",
+  "photo": "https://c.ndtvimg.com/2026-09/c83rajhg_ai-researcher_625x300_15_September_26.jpg?im=FitAndFill,algorithm=dnn,width=1600,height=900",
+  "author": "",
+  "date": "",
+  "totalParagraphs": 19,
+  "paragraphs": [
+    "The alarm over the risks of artificial intelligence is getting louder.",
+    "Days after former Anthropic researcher Jacob Coxon warned that AI could potentially kill all humans by the end of the decade, another AI safety researcher has walked away from a major AI lab with a stark warning of his own.",
+    "Josh Engels, who worked on Google DeepMind's AGI safety team, has left the company and joined AI evaluation organisation METR. He said he made the move because he believes the stakes surrounding advanced AI have become too high.",
+    "In a post on X, Engels said he left DeepMind three weeks ago. He said he enjoyed his work at the company and had even turned down offers from Anthropic and OpenAI.",
+    "Yet he still decided to leave. \"I now think that there's a terrifying chance that AI systems cause immense harm in the next five years,\" Engels wrote. He added that he did not know the exact probability. But, in his view, the risk was high enough to make AI safety \"the most important problem in the world.\"",
+    "At the heart of his concern is what AI researchers call recursive self-improvement.",
+    "An AI system becomes capable of designing or improving another AI system. That newer system becomes even better at improving AI, creating a feedback loop. If such a system is not properly aligned with human goals, Engels believes the consequences could be severe.",
+    "\"The AI companies are all trying to build superintelligence,\" he said, referring to systems that could eventually become vastly better than humans at a wide range of tasks. The problem, according to Engels, is that researchers still do not know how to make such systems sufficiently safe before allowing them to improve themselves.",
+    "He warned that a misaligned recursive self-improvement loop could be catastrophic.",
+    "Engels also pointed to several recent incidents involving AI systems. He said researchers have seen models colluding with each other, hacking into companies, hiding their actions and attempting to socially engineer humans.",
+    "His argument is not that these individual incidents are necessarily catastrophic. The bigger concern is what they reveal about the behaviour of increasingly capable systems.",
+    "Engels said current AI models appear to be becoming \"less aligned over time, not more\". That, he believes, should be a warning before the industry takes the next major step towards self-improving AI.",
+    "Engels said the answer is not necessarily to stop AI development altogether. Instead, he wants AI development to slow down enough for safety research to catch up. \"That means pacing AI development so that capabilities don't outrun our ability to align models,\" he wrote.",
+    "His new role at METR will focus on studying where AI misalignment comes from, testing whether existing safety measures work and examining whether researchers are actually on track to solve the AI alignment problem.",
+    "Engels also said METR's work is important, but not sufficient on its own. He called for more organisations that can independently evaluate AI companies and hold them accountable.",
+    "Engels' warning comes at a particularly sensitive time for the AI industry.",
+    "Earlier this month, Jacob Coxon resigned from Anthropic after previously working at OpenAI. He said AI companies were racing towards self-improving superintelligence and warned that people building these systems believe AI could kill all humans by the end of the decade.",
+    "Anthropic alignment science lead Evan Hubinger subsequently said he agreed with Coxon's assessment and put the chance of AI killing all humans within the next decade at more than 10 per cent.",
+    "Track Latest News Live on NDTV.com and get news updates from India and around the world"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "source": "NDTV",
+  "url": "https://www.ndtvprofit.com/world/openai-urges-us-to-lead-global-safety-standards-for-frontier-ai-and-self-improving-models-12078239",
+  "heading": "OpenAI Urges US To Lead Global Safety Standards For Frontier AI And Self-Improving Models",
+  "category": "World",
+  "photo": "https://c.ndtvimg.com/2026-09/0cgktffs_openai_625x300_21_September_26.jpg?im=FeatureCrop,algorithm=dnn,width=1600,height=900",
+  "author": "",
+  "date": "",
+  "totalParagraphs": 10,
+  "paragraphs": [
+    "OpenAI has called on the United States to lead an international effort to establish technical safety standards for frontier artificial intelligence, including systems capable of recursive self-improvement, as increasingly autonomous AI research could accelerate the pace of technological development.",
+    "In a new policy proposal, OpenAI said AI safety cannot be addressed by individual countries or companies alone because frontier AI development and deployment are increasingly global.",
+    "It argued that differences in evaluations, reporting requirements and definitions of AI incidents could make it harder for countries to compare risks and respond to threats that cross borders.",
+    "A major focus of the proposal is recursive self-improvement, in which AI systems could increasingly perform research needed to develop successive generations of AI. OpenAI said fully autonomous RSI is not happening today and should not be pursued unless it can be carried out safely while preserving meaningful human control.",
+    "The company proposed a framework combining national and international standards, with AI safety institutes and other technical bodies working together on common benchmarks and risk assessments.",
+    "OpenAI suggested using existing networks involving countries including India, Japan, the UK, Canada, France, Germany, Singapore and South Korea.",
+    "The proposed standards could cover AI capability measurement, evaluation of RSI-related progress, human oversight of automated research and incident reporting, including common severity levels and reporting thresholds.",
+    "Importantly, OpenAI said these standards would not automatically create licensing, mandatory pre-release reviews, or approval requirements for AI models.",
+    "OpenAI also called for secure communication channels between governments and critical infrastructure operators to exchange information on emerging vulnerabilities and national-security risks.",
+    "Essential Business Intelligence, Sharp Market Insights, Practical Personal Finance Advice, Daily Fuel, Gold and Silver Prices and Latest Stories — On NDTV Profit."
+  ]
+}

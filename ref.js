@@ -13,18 +13,39 @@ if (!fs.existsSync(dataDir)) {
 const historyFile = path.join(__dirname, 'history.txt');
 const scrapedHistory = new Set();
 
+/**
+ * Smart URL Normalizer: removes tracking parameters, query strings, hashes, and trailing slashes
+ */
+function normalizeUrl(rawUrl) {
+  try {
+    const u = new URL(rawUrl);
+    u.hash = '';
+    u.search = '';
+    let clean = u.href;
+    if (clean.endsWith('/')) clean = clean.slice(0, -1);
+    return clean;
+  } catch (e) {
+    return (rawUrl || '').trim();
+  }
+}
+
 if (fs.existsSync(historyFile)) {
   const lines = fs.readFileSync(historyFile, 'utf8').split('\n');
   for (const line of lines) {
     const trimmed = line.trim();
-    if (trimmed) scrapedHistory.add(trimmed);
+    if (trimmed) {
+      scrapedHistory.add(normalizeUrl(trimmed));
+      scrapedHistory.add(trimmed);
+    }
   }
 }
 
 function recordInHistory(url) {
-  if (!scrapedHistory.has(url)) {
+  const clean = normalizeUrl(url);
+  if (!scrapedHistory.has(clean)) {
+    scrapedHistory.add(clean);
     scrapedHistory.add(url);
-    fs.appendFileSync(historyFile, url + '\n');
+    fs.appendFileSync(historyFile, clean + '\n');
   }
 }
 
@@ -53,6 +74,31 @@ const ignorePhrases = [
   'follow us on',
   'to continue, please click the box below'
 ];
+
+/**
+ * Exact story URL validator across all 10 major networks
+ * Rejects non-news utilities, players, login pages, and ads
+ */
+function isRealStory(url) {
+  try {
+    const u = new URL(url);
+    const p = u.pathname.toLowerCase();
+    if (p.includes('/players/') || p.includes('/teams/') || p.includes('/scores/') || p.includes('/series/') || p.includes('/stats/')) return false;
+    if (p.includes('/logout') || p.includes('/login') || p.includes('/about') || p.includes('/contact') || p.includes('/terms') || p.includes('/privacy') || p.includes('/ht-img/')) return false;
+
+    if (p.endsWith('.html') && /-\d{8,}\.html$/.test(p)) return true; // Hindustan Times, LiveMint
+    if (p.endsWith('.ece') && /article\d+\.ece$/.test(p)) return true; // The Hindu
+    if (p.includes('/articleshow/') && p.endsWith('.cms')) return true; // Times of India
+    if (p.includes('/story/') && /-\d{5,}/.test(p)) return true; // Aaj Tak & India Today
+    if (/\/articles\/c[a-z0-9]+/i.test(p)) return true; // BBC News
+    if (/\/news\/articles\/\d{4}-/i.test(p)) return true; // Bloomberg
+    if (/\/article\/.*-\d{6,}\/?$/i.test(p)) return true; // Indian Express
+    if (/-\d{7,}\/?$/i.test(p)) return true; // NDTV
+    return false;
+  } catch(e) {
+    return false;
+  }
+}
 
 /**
  * Universal Source Identifier
@@ -112,9 +158,10 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
     // Check if we hit a genuine bot-block or empty HTML (e.g. Bloomberg 403 / captcha)
     const isBlocked = !html || html.length < 500 || html.includes('please click the box below') || html.includes('captcha-delivery');
 
+    let $ = null;
     if (!isBlocked) {
       // Normal HTML extraction
-      const $ = cheerio.load(html);
+      $ = cheerio.load(html);
 
       heading = $('meta[property="og:title"]').attr('content') || 
                 $('h1').first().text().trim() || 
@@ -191,7 +238,7 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
 
     // In-page Related News & Suggestion Link Discovery (Web Spidering)
     const discoveredLinks = [];
-    if (!isBlocked) {
+    if (!isBlocked && $) {
       $('a[href]').each((_, el) => {
         try {
           const rawHref = $(el).attr('href');
@@ -203,29 +250,8 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
 
           // Keep within the same news organization domain
           if (host.includes(baseHost.replace('www.', '')) || baseHost.includes(host.replace('www.', ''))) {
-            const pathName = new URL(absUrl).pathname.toLowerCase();
-            const isArticle = (
-              pathName.endsWith('.html') ||
-              pathName.endsWith('.ece') ||
-              pathName.endsWith('.cms') ||
-              pathName.includes('/story/') ||
-              pathName.includes('/article/') ||
-              pathName.includes('/news/') ||
-              /\/\d{5,}/.test(pathName)
-            );
-            const isNotNoise = (
-              !pathName.includes('/tag/') &&
-              !pathName.includes('/category/') &&
-              !pathName.includes('/topic/') &&
-              !pathName.includes('/author/') &&
-              !pathName.includes('/about-us') &&
-              !pathName.includes('/privacy') &&
-              !pathName.includes('/terms') &&
-              !pathName.includes('/video') &&
-              !pathName.includes('/photos')
-            );
-
-            if (isArticle && isNotNoise && !scrapedHistory.has(absUrl)) {
+            const clean = normalizeUrl(absUrl);
+            if (isRealStory(absUrl) && !scrapedHistory.has(clean) && !scrapedHistory.has(absUrl)) {
               discoveredLinks.push(absUrl);
             }
           }
@@ -554,49 +580,105 @@ async function crawlAllArticles(concurrency = 8) {
 
   const sessionDir = path.join(dataDir, dateFolder, timeFolder);
 
+  // 1. Separate discovered seeds into unvisited vs already cached
+  let unvisitedArticles = [];
+  const visitedArticles = [];
+
+  for (const url of articleLinks) {
+    const norm = normalizeUrl(url);
+    if (scrapedHistory.has(norm) || scrapedHistory.has(url)) {
+      visitedArticles.push(url);
+    } else {
+      unvisitedArticles.push(url);
+    }
+  }
+
   console.log(`\n==========================================================`);
-  console.log(`🎯 TOTAL SEED ARTICLES DISCOVERED: ${total}`);
-  console.log(`⏰ Run Session Folder: Data/${dateFolder}/${timeFolder}/`);
-  console.log(`⚡ Concurrency: ${concurrency} parallel multi-source workers`);
-  console.log(`🕸️  In-Page Deep Spider: ACTIVE (Auto-crawling suggested & related stories)`);
-  console.log(`🚀 All news websites are now working TOGETHER simultaneously!`);
+  console.log(`🎯 TOTAL SEEDS SCANNED   : ${total}`);
+  console.log(`⏩ ALREADY IN HISTORY   : ${visitedArticles.length} (Skipping redundant downloads)`);
+  console.log(`✨ NEW UN-SCRAPED SEEDS : ${unvisitedArticles.length}`);
+  console.log(`⏰ Run Session Folder   : Data/${dateFolder}/${timeFolder}/`);
+  console.log(`⚡ Concurrency          : ${concurrency} parallel multi-source workers`);
+
+  // 2. SMART SPIDER AUTO-ACTIVATION:
+  // If new seeds are few (< 40), the spider automatically dives into existing articles to find un-downloaded stories!
+  if (unvisitedArticles.length < 40 && visitedArticles.length > 0) {
+    console.log(`\n🕸️  SMART DEEP SPIDER ACTIVATED!`);
+    console.log(`   (Seeds already exist in history; deep-scanning existing articles for related stories...)`);
+
+    // Pick 80 diverse articles from history
+    const shuffledVisited = [...visitedArticles].sort(() => 0.5 - Math.random()).slice(0, 80);
+    const newDiscoveredSet = new Set();
+
+    await Promise.all(shuffledVisited.map(async (vUrl) => {
+      try {
+        const res = await fetch(vUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          signal: AbortSignal.timeout(8000)
+        });
+        if (!res.ok) return;
+        const html = await res.text();
+        const $ = cheerio.load(html);
+        const host = new URL(vUrl).hostname.toLowerCase();
+
+        $('a[href]').each((_, el) => {
+          try {
+            const raw = $(el).attr('href');
+            if (!raw || raw.startsWith('#') || raw.startsWith('javascript:')) return;
+            const abs = new URL(raw, vUrl).href.split('?')[0].split('#')[0];
+            const absHost = new URL(abs).hostname.toLowerCase();
+            if (absHost.includes(host.replace('www.', '')) || host.includes(absHost.replace('www.', ''))) {
+              const normAbs = normalizeUrl(abs);
+              if (isRealStory(abs) && !scrapedHistory.has(normAbs) && !scrapedHistory.has(abs)) {
+                newDiscoveredSet.add(abs);
+              }
+            }
+          } catch(e) {}
+        });
+      } catch(e) {}
+    }));
+
+    console.log(`   ✨ Deep Spider Discovered: +${newDiscoveredSet.size} BRAND NEW un-downloaded articles!`);
+    for (const dUrl of newDiscoveredSet) {
+      unvisitedArticles.push(dUrl);
+    }
+  }
+
+  console.log(`🚀 Starting download of ${unvisitedArticles.length} NEW articles...`);
   console.log(`==========================================================\n`);
 
   let savedCount = 0;
-  let skippedCount = 0;
+  let skippedCount = visitedArticles.length;
   let currentIndex = 0;
   const savedBySource = {};
-  const seenInRun = new Set(articleLinks);
-  const MAX_SPIDER_DISCOVERIES = 600; // Cap to keep runs balanced and high quality
+  const seenInRun = new Set(unvisitedArticles);
+  const MAX_SPIDER_DISCOVERIES = 600;
   let spiderDiscoveredCount = 0;
 
   // Parallel Worker pool
   async function worker(workerId) {
-    while (currentIndex < articleLinks.length) {
+    while (currentIndex < unvisitedArticles.length) {
       const index = currentIndex++;
-      const url = articleLinks[index];
-      const progress = `[${index + 1}/${articleLinks.length}] (${Math.round(((index + 1) / articleLinks.length) * 100)}%)`;
-
-      // Instant history check: skip without sending HTTP request!
-      if (scrapedHistory.has(url)) {
-        skippedCount++;
-        continue;
-      }
+      const url = unvisitedArticles[index];
+      const progress = `[${index + 1}/${unvisitedArticles.length}] (${Math.round(((index + 1) / unvisitedArticles.length) * 100)}%)`;
 
       const result = await scrapeSingleArticle(url, sessionDir);
-      if (result) {
-        if (result.status === 'skipped') {
-          skippedCount++;
-        } else {
+      if (!result) {
+        console.log(`${progress} ⚠️ [NOT SAVED] Returned null for: ${url.slice(0, 60)}`);
+      } else if (result.status === 'skipped') {
+        console.log(`${progress} ⏩ [SKIPPED] ${url.slice(0, 60)}`);
+        skippedCount++;
+      } else {
           savedBySource[result.source] = (savedBySource[result.source] || 0) + 1;
 
           // Recursive Spidering: Enqueue newly discovered suggested links from the page
           let spiderAdded = 0;
           if (result.discoveredLinks && result.discoveredLinks.length > 0 && spiderDiscoveredCount < MAX_SPIDER_DISCOVERIES) {
             for (const sugUrl of result.discoveredLinks) {
-              if (!scrapedHistory.has(sugUrl) && !seenInRun.has(sugUrl)) {
+              const normSug = normalizeUrl(sugUrl);
+              if (!scrapedHistory.has(normSug) && !scrapedHistory.has(sugUrl) && !seenInRun.has(sugUrl)) {
                 seenInRun.add(sugUrl);
-                articleLinks.push(sugUrl);
+                unvisitedArticles.push(sugUrl);
                 spiderDiscoveredCount++;
                 spiderAdded++;
                 if (spiderDiscoveredCount >= MAX_SPIDER_DISCOVERIES) break;
@@ -608,14 +690,13 @@ async function crawlAllArticles(concurrency = 8) {
           console.log(`${progress} ✅ [SAVED] [${result.source}] [${result.category}]: "${result.heading.slice(0, 36)}..." (${result.paragraphsCount} paras)${spiderBadge}`);
           savedCount++;
         }
+
+        await sleep(100);
       }
-
-      await sleep(100);
     }
-  }
 
-  const workers = Array.from({ length: concurrency }, (_, i) => worker(i + 1));
-  await Promise.all(workers);
+    const workers = Array.from({ length: concurrency }, (_, i) => worker(i + 1));
+    await Promise.all(workers);
 
   console.log(`\n==========================================================`);
   console.log(`🎉 MULTI-SOURCE CRAWL COMPLETE!`);
@@ -629,7 +710,7 @@ async function crawlAllArticles(concurrency = 8) {
       console.log(`      * ${srcName.padEnd(20)}: ${count} articles`);
     }
   } else {
-    console.log(`   ℹ️ No new articles were published since the last run.`);
+    console.log(`   ℹ️ No new articles found even after deep crawling.`);
   }
   console.log(`==========================================================\n`);
 }
