@@ -1,0 +1,31 @@
+==========================================================
+📰 HEADING:
+How are noisy celebrations and DJs affecting our hearing?
+
+📸 PHOTO URL:
+https://th-i.thgim.com/public/incoming/lcl45i/article71483776.ece/alternates/LANDSCAPE_1200/iStock-1615644280.jpg
+
+✍️ AUTHOR: Serish Nanisetti
+📅 DATE: 2026-09-19T11:15:40+05:30
+🔗 URL: https://www.thehindu.com/sci-tech/science/how-are-noisy-celebrations-and-djs-affecting-the-hearing-of-humans/article71483768.ece
+==========================================================
+
+📝 CLEAN ARTICLE BODY:
+
+The story so far: Noisy celebrations have now become a part and parcel of urban as well as rural Indian life. As vehicles packed with powerful new speakers known as DJs are available at lower prices and the competition to play high-volume music has reached all parts of the country, it is posing a challenge to body and soul.
+
+A new research paper published in Scientific Reports in January 2026 uses the term ‘subclinical hearing damage’ to identify the effect on hearing due to high-level amplified music at recreational/celebratory events. While the researchers focused on recreational events, the conditions match those of celebratory events in India where sound pressure levels cross 90 A-weighted decibels (dBA) or more for prolonged periods, sometimes days. These sound levels have been known to cause noise-induced hearing loss.
+
+“The important factor is the sound level at the listener’s ears, rather than the power of the amplifier in watts. Sound levels above 120 dB SPL can damage the ears in a very short time,” says Prof. Brian Moore, Emeritus Professor of Auditory Perception at the University of Cambridge.
+
+“Growing evidence suggests that noise exposure can also lead to a more subtle form of auditory damage that occurs while hearing sensitivity or outer hair cell integrity remains unaffected,” say the researchers in the paper. The research led by Nele De Poortere from Ghent University, Belgium, suggests that the hearing loss may be undetectable and permanent. This is due to the damage to cochlear synapses without affecting outer hair cells (OHCs), labelling it as ‘cochlear synaptopathy’. Loud environments can lead to unnoticed, yet possibly irreversible, changes in hair cells within the inner ear that are critical for translating sound into neural signals.
+
+At a festive event in Hyderabad on Friday (September 18 2026), a reporter measured the sound level and recorded it at over 108 dBA using an app developed by the Centres for Disease Control and Prevention of the U.S. In contrast, a normal rock concert has sounds that range between 110-120 dB, where artistes wear protective gear for their ears. The decibel meter is a logarithmic scale where a 10 db increase means a 10 times increase and another 10 dB means an increase of over 100 times.
+
+A 21-inch 3000-watt (RMS) speaker is now available for ₹95,000 and a 6000-watt speaker for ₹1.6 lakh. For ₹7 lakh, four such massive speakers can be bought with the whole rig, including the amplifier and mixer, under ₹10 lakh. As the number of celebratory events has increased, more and more citizens are getting exposed to these sounds.
+
+The Central Pollution Control Board’s noise pollution limits range from 40 dBA in silent zones during nighttime to 75 dBA in industrial areas during daytime. The dBA factors in human hearing and gives weightage to high-frequency noises. The World Health Organisation has warned that over “1 billion young adults are at risk of permanent, avoidable hearing loss due to unsafe listening practices”.
+
+There have been piecemeal, localised bans and community-enforced limits on DJs in urban areas. Even police action is challenged by social and political forces. A greater awareness about the long-term damage to hearing due to loud music is the only available option.
+
+==========================================================

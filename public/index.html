@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinScope - Financial Terminal & Company Fundamentals</title>
+  <meta name="description" content="Yahoo Finance powered financial terminal for in-depth company fundamentals, key valuation ratios, interactive stock charts, and in-app news reading.">
+  
+  <!-- Google Fonts: Outfit (Brand & Headings), Inter (Body & Articles), JetBrains Mono (Financial Numbers) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js for Interactive Price Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Market Indices Ticker Tape (Like Yahoo Finance) -->
+  <div class="market-ticker-tape">
+    <div class="ticker-tape-track">
+      <div class="tape-item"><span class="tape-name">S&P 500</span> <span class="tape-val">5,864.67</span> <span class="tape-chg up">+0.41%</span></div>
+      <div class="tape-item"><span class="tape-name">NASDAQ</span> <span class="tape-val">18,373.61</span> <span class="tape-chg up">+0.63%</span></div>
+      <div class="tape-item"><span class="tape-name">DOW 30</span> <span class="tape-val">42,863.86</span> <span class="tape-chg up">+0.09%</span></div>
+      <div class="tape-item"><span class="tape-name">NIFTY 50</span> <span class="tape-val">24,964.25</span> <span class="tape-chg up">+0.42%</span></div>
+      <div class="tape-item"><span class="tape-name">SENSEX</span> <span class="tape-val">81,559.84</span> <span class="tape-chg up">+0.35%</span></div>
+      <div class="tape-item"><span class="tape-name">GOLD</span> <span class="tape-val">$2,652.10</span> <span class="tape-chg up">+0.28%</span></div>
+      <div class="tape-item"><span class="tape-name">CRUDE OIL</span> <span class="tape-val">$70.84</span> <span class="tape-chg down">-1.24%</span></div>
+      <div class="tape-item"><span class="tape-name">BITCOIN</span> <span class="tape-val">$63,240.00</span> <span class="tape-chg up">+1.85%</span></div>
+      <!-- Duplicate for seamless infinite loop -->
+      <div class="tape-item"><span class="tape-name">S&P 500</span> <span class="tape-val">5,864.67</span> <span class="tape-chg up">+0.41%</span></div>
+      <div class="tape-item"><span class="tape-name">NASDAQ</span> <span class="tape-val">18,373.61</span> <span class="tape-chg up">+0.63%</span></div>
+      <div class="tape-item"><span class="tape-name">DOW 30</span> <span class="tape-val">42,863.86</span> <span class="tape-chg up">+0.09%</span></div>
+      <div class="tape-item"><span class="tape-name">NIFTY 50</span> <span class="tape-val">24,964.25</span> <span class="tape-chg up">+0.42%</span></div>
+    </div>
+  </div>
+
+  <!-- Header & Main Search Bar -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <h2>Fin<span>Scope</span></h2>
+          <span class="pro-badge">YAHOO FINANCE LIVE</span>
+        </div>
+      </div>
+
+      <!-- Integrated Header Search Bar -->
+      <div class="header-search-wrap">
+        <div class="search-input-box">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="text" 
+            id="companySearchInput" 
+            placeholder="Search company name or ticker symbol (e.g. Apple, Tata Motors, Reliance, Tesla, MSFT)..." 
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button class="clear-input-btn" id="clearSearchBtn" title="Clear input">✕</button>
+          <button class="search-btn" id="searchSubmitBtn">Search</button>
+        </div>
+
+        <!-- Autocomplete Suggestions Dropdown -->
+        <div class="search-autocomplete-box hidden" id="searchDropdown"></div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-indicator">
+          <span class="dot-pulse"></span>
+          <span>Live Feed</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Quick Company Shortcut Bar -->
+  <nav class="shortcuts-bar">
+    <div class="shortcuts-inner">
+      <span class="shortcuts-label">Trending Companies:</span>
+      <div class="shortcuts-list">
+        <button class="shortcut-pill active" data-symbol="AAPL">Apple (AAPL)</button>
+        <button class="shortcut-pill" data-symbol="MSFT">Microsoft (MSFT)</button>
+        <button class="shortcut-pill" data-symbol="NVDA">Nvidia (NVDA)</button>
+        <button class="shortcut-pill" data-symbol="TSLA">Tesla (TSLA)</button>
+        <button class="shortcut-pill" data-symbol="RELIANCE.NS">Reliance (RELIANCE.NS)</button>
+        <button class="shortcut-pill" data-symbol="TMCV.NS">Tata Motors (TMCV.NS)</button>
+        <button class="shortcut-pill" data-symbol="INFY.NS">Infosys (INFY.NS)</button>
+        <button class="shortcut-pill" data-symbol="GOOGL">Alphabet (GOOGL)</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Body -->
+  <main class="main-wrapper">
+
+    <!-- Error State Notice -->
+    <div class="error-banner hidden" id="errorContainer">
+      <div class="error-badge">⚠️</div>
+      <div class="error-details">
+        <h4 id="errorTitle">Could not fetch company fundamentals</h4>
+        <p id="errorMessage">Please check the search term and try again.</p>
+      </div>
+    </div>
+
+    <!-- Skeleton Shimmer Loader -->
+    <div class="shimmer-loader hidden" id="loadingState">
+      <div class="skeleton sk-hero"></div>
+      <div class="skeleton sk-nav"></div>
+      <div class="skeleton sk-content"></div>
+    </div>
+
+    <!-- Active Company Dashboard -->
+    <div class="company-dashboard" id="dashboardContent">
+
+      <!-- Hero Header: Company Quote & Live Price Ribbon -->
+      <section class="company-hero-banner">
+        <div class="hero-primary">
+          <div class="identity-block">
+            <div class="company-name-row">
+              <h1 id="companyName">--</h1>
+              <span class="ticker-badge" id="companyTicker">--</span>
+              <span class="exchange-badge" id="companyExchange">--</span>
+            </div>
+            <div class="tags-row">
+              <span class="tag-item" id="companySector">Sector: --</span>
+              <span class="tag-item" id="companyIndustry">Industry: --</span>
+              <span class="tag-item" id="companyCountry">Country: --</span>
+              <span class="tag-item tag-state" id="marketState">Market Open</span>
+            </div>
+          </div>
+
+          <div class="price-display-block">
+            <div class="main-price-row">
+              <span class="curr-sign" id="currencySymbol">$</span>
+              <span class="live-price" id="currentPrice">--</span>
+              <span class="curr-code" id="currencyCode">USD</span>
+            </div>
+            <div class="price-chg-pill" id="priceChangePill">
+              <span id="priceChangeArrow">▲</span>
+              <span id="priceChangeVal">--</span>
+              <span id="priceChangePct">(--%)</span>
+            </div>
+            <div class="market-time-note" id="marketTimeNote">Real-time quote via Yahoo Finance</div>
+          </div>
+        </div>
+
+        <!-- 52-Week & Day Range Slider -->
+        <div class="range-sliders-grid">
+          <div class="range-card">
+            <div class="range-info-top">
+              <span>Day's Range</span>
+              <span><strong id="dayLow">--</strong> — <strong id="dayHigh">--</strong></span>
+            </div>
+            <div class="range-track">
+              <div class="range-fill" id="dayRangeBar"></div>
+            </div>
+          </div>
+
+          <div class="range-card">
+            <div class="range-info-top">
+              <span>52-Week Range</span>
+              <span><strong id="fiftyTwoWeekLow">--</strong> — <strong id="fiftyTwoWeekHigh">--</strong></span>
+            </div>
+            <div class="range-track">
+              <div class="range-fill" id="fiftyTwoWeekBar">
+                <div class="range-pin"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Highlight KPI Row -->
+        <div class="kpi-quick-strip">
+          <div class="kpi-box">
+            <span class="kpi-sub">Market Cap</span>
+            <span class="kpi-val" id="kpiMarketCap">--</span>
+          </div>
+          <div class="kpi-box">
+            <span class="kpi-sub">P/E Ratio (TTM)</span>
+            <span class="kpi-val" id="kpiPE">--</span>
+          </div>
+          <div class="kpi-box">
+            <span class="kpi-sub">EPS (Diluted)</span>
+            <span class="kpi-val" id="kpiEPS">--</span>
+          </div>
+          <div class="kpi-box">
+            <span class="kpi-sub">Total Revenue</span>
+            <span class="kpi-val" id="kpiRevenue">--</span>
+          </div>
+          <div class="kpi-box">
+            <span class="kpi-sub">Profit Margin</span>
+            <span class="kpi-val" id="kpiMargin">--</span>
+          </div>
+          <div class="kpi-box">
+            <span class="kpi-sub">Beta</span>
+            <span class="kpi-val" id="kpiBeta">--</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Navigation Tabs (Like Yahoo Finance) -->
+      <div class="dashboard-tabs-bar">
+        <button class="nav-tab active" data-tab="tab-summary">Summary & Chart</button>
+        <button class="nav-tab" data-tab="tab-valuation">Valuation & Multiples</button>
+        <button class="nav-tab" data-tab="tab-financials">Financials & Margins</button>
+        <button class="nav-tab" data-tab="tab-balance">Balance Sheet & Cash</button>
+        <button class="nav-tab" data-tab="tab-profile">Company Profile</button>
+        <button class="nav-tab nav-tab-news" data-tab="tab-news">
+          News & Articles 
+          <span class="tab-badge" id="newsCountBadge">0</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Summary & Interactive Stock Chart -->
+      <section class="tab-pane active" id="tab-summary">
+        <div class="summary-layout">
+          <div class="chart-box-card">
+            <div class="chart-header-row">
+              <div class="chart-title">
+                <h3>Stock Price Performance</h3>
+                <span class="chart-sub">Historical trend from Yahoo Finance</span>
+              </div>
+              <div class="timeframe-selector">
+                <button class="tf-btn" data-range="1mo">1M</button>
+                <button class="tf-btn" data-range="3mo">3M</button>
+                <button class="tf-btn" data-range="6mo">6M</button>
+                <button class="tf-btn active" data-range="1y">1Y</button>
+                <button class="tf-btn" data-range="5y">5Y</button>
+              </div>
+            </div>
+            <div class="canvas-container">
+              <canvas id="stockChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Key Metrics Side Panel -->
+          <div class="side-metrics-card">
+            <div class="card-title-compact">Key Statistics At A Glance</div>
+            <div class="metrics-table-compact">
+              <div class="row-pair"><span>Previous Close</span><strong id="statPrevClose">--</strong></div>
+              <div class="row-pair"><span>Open Price</span><strong id="statOpen">--</strong></div>
+              <div class="row-pair"><span>Day's Range</span><strong id="statDayRange">--</strong></div>
+              <div class="row-pair"><span>52 Week Range</span><strong id="stat52Range">--</strong></div>
+              <div class="row-pair"><span>Volume</span><strong id="statVolume">--</strong></div>
+              <div class="row-pair"><span>Avg. Volume (3M)</span><strong id="statAvgVolSide">--</strong></div>
+              <div class="row-pair"><span>Market Cap</span><strong id="statMarketCapSide">--</strong></div>
+              <div class="row-pair"><span>Beta (5Y Monthly)</span><strong id="statBetaSide">--</strong></div>
+              <div class="row-pair"><span>PE Ratio (TTM)</span><strong id="statPESide">--</strong></div>
+              <div class="row-pair"><span>EPS (TTM)</span><strong id="statEPSSide">--</strong></div>
+              <div class="row-pair"><span>Dividend Yield</span><strong id="statYieldSide">--</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Infinite Scroll News Feed -->
+        <div class="infinite-news-section">
+          <div class="section-title-row">
+            <div class="news-heading-wrap">
+              <h3>Real-Time Company News Stream</h3>
+              <span class="news-counter-pill" id="newsCounterText">Showing 0 articles</span>
+            </div>
+            <div class="news-live-tag">
+              <span class="dot-pulse"></span>
+              <span>Infinite Scroll Feed</span>
+            </div>
+          </div>
+
+          <!-- News Cards Stream Container -->
+          <div class="news-grid-stream" id="infiniteNewsGrid"></div>
+
+          <!-- Infinite Scroll Sentinel & Loading Spinner -->
+          <div class="infinite-scroll-sentinel" id="infiniteScrollTrigger">
+            <div class="infinite-loader" id="infiniteLoader">
+              <div class="spinner-ring"></div>
+              <span>Loading more articles from Yahoo Finance as you scroll down...</span>
+            </div>
+            <div class="infinite-end-msg hidden" id="infiniteEndMsg">
+              🎉 You've reached the end! All available Yahoo Finance news articles loaded.
+            </div>
+            <button class="manual-load-btn" id="manualLoadMoreBtn">Load More Articles ↓</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Valuation & Multiples -->
+      <section class="tab-pane" id="tab-valuation">
+        <div class="two-col-grid">
+          <div class="data-card">
+            <div class="data-card-header">
+              <span class="icon">💎</span>
+              <h4>Valuation Metrics & Multiples</h4>
+            </div>
+            <div class="data-rows">
+              <div class="data-row"><span class="label">Market Capitalization</span><span class="val" id="valMarketCap">--</span></div>
+              <div class="data-row"><span class="label">Enterprise Value (EV)</span><span class="val" id="valEV">--</span></div>
+              <div class="data-row"><span class="label">Trailing P/E Ratio</span><span class="val" id="valTrailingPE">--</span></div>
+              <div class="data-row"><span class="label">Forward P/E Ratio</span><span class="val" id="valForwardPE">--</span></div>
+              <div class="data-row"><span class="label">PEG Ratio (5-yr Expected)</span><span class="val" id="valPEG">--</span></div>
+              <div class="data-row"><span class="label">Price to Sales (P/S TTM)</span><span class="val" id="valPriceToSales">--</span></div>
+              <div class="data-row"><span class="label">Price to Book (P/B)</span><span class="val" id="valPriceToBook">--</span></div>
+              <div class="data-row"><span class="label">Enterprise Value / Revenue</span><span class="val" id="valEvToRev">--</span></div>
+              <div class="data-row"><span class="label">Enterprise Value / EBITDA</span><span class="val" id="valEvToEbitda">--</span></div>
+            </div>
+          </div>
+
+          <div class="data-card">
+            <div class="data-card-header">
+              <span class="icon">📈</span>
+              <h4>Per-Share Valuation & Earnings</h4>
+            </div>
+            <div class="data-rows">
+              <div class="data-row"><span class="label">Diluted EPS (Trailing 12M)</span><span class="val" id="valTrailingEPS">--</span></div>
+              <div class="data-row"><span class="label">Forward EPS Estimate</span><span class="val" id="valForwardEPS">--</span></div>
+              <div class="data-row"><span class="label">Book Value Per Share</span><span class="val" id="valBookValue">--</span></div>
+              <div class="data-row"><span class="label">Revenue Per Share</span><span class="val" id="profRevPerShare">--</span></div>
+              <div class="data-row"><span class="label">Cash Per Share</span><span class="val" id="balCashPerShare">--</span></div>
+              <div class="data-row"><span class="label">Shares Outstanding</span><span class="val" id="statSharesOut">--</span></div>
+              <div class="data-row"><span class="label">Float Shares</span><span class="val" id="statFloat">--</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Financials & Profitability -->
+      <section class="tab-pane" id="tab-financials">
+        <div class="two-col-grid">
+          <div class="data-card">
+            <div class="data-card-header">
+              <span class="icon">📊</span>
+              <h4>Income Statement Highlights</h4>
+            </div>
+            <div class="data-rows">
+              <div class="data-row"><span class="label">Total Revenue (TTM)</span><span class="val" id="profRevenue">--</span></div>
+              <div class="data-row"><span class="label">Gross Profit (TTM)</span><span class="val" id="profGrossProfit">--</span></div>
+              <div class="data-row"><span class="label">EBITDA</span><span class="val" id="profEbitda">--</span></div>
+              <div class="data-row"><span class="label">Net Income to Common</span><span class="val" id="profNetIncome">--</span></div>
+              <div class="data-row"><span class="label">Quarterly Revenue Growth (YoY)</span><span class="val" id="profRevenueGrowth">--</span></div>
+            </div>
+          </div>
+
+          <div class="data-card">
+            <div class="data-card-header">
+              <span class="icon">🎯</span>
+              <h4>Profit Margins & Returns</h4>
+            </div>
+            <div class="data-rows">
+              <div class="data-row"><span class="label">Gross Profit Margin</span><span class="val" id="profGrossMargin">--</span></div>
+              <div class="data-row"><span class="label">Operating Margin</span><span class="val" id="profOperatingMargin">--</span></div>
+              <div class="data-row"><span class="label">Net Profit Margin</span><span class="val" id="profProfitMargin">--</span></div>
+              <div class="data-row"><span class="label">Return on Assets (ROA TTM)</span><span class="val" id="profROA">--</span></div>
+              <div class="data-row"><span class="label">Return on Equity (ROE TTM)</span><span class="val" id="profROE">--</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 4: Balance Sheet, Cash Flow & Dividends -->
+      <section class="tab-pane" id="tab-balance">
+        <div class="two-col-grid">
+          <div class="data-card">
+            <div class="data-card-header">
+              <span class="icon">🏦</span>
+              <h4>Balance Sheet & Solvency</h4>
+            </div>
+            <div class="data-rows">
+              <div class="data-row"><span class="label">Total Cash & Equivalents</span><span class="val" id="balTotalCash">--</span></div>
+              <div class="data-row"><span class="label">Total Debt</span><span class="val" id="balTotalDebt">--</span></div>
+              <div class="data-row"><span class="label">Debt to Equity Ratio</span><span class="val" id="balDebtToEquity">--</span></div>
+              <div class="data-row"><span class="label">Current Ratio (Liquidity)</span><span class="val" id="balCurrentRatio">--</span></div>
+              <div class="data-row"><span class="label">Quick Ratio (Acid Test)</span><span class="val" id="balQuickRatio">--</span></div>
+              <div class="data-row"><span class="label">Operating Cash Flow (TTM)</span><span class="val" id="balOperatingCash">--</span></div>
+              <div class="data-row"><span class="label">Free Cash Flow (FCF)</span><span class="val" id="balFreeCashflow">--</span></div>
+            </div>
+          </div>
+
+          <div class="data-card">
+            <div class="data-card-header">
+              <span class="icon">🪙</span>
+              <h4>Dividends & Trading Liquidity</h4>
+            </div>
+            <div class="data-rows">
+              <div class="data-row"><span class="label">Annual Dividend Rate</span><span class="val" id="divRate">--</span></div>
+              <div class="data-row"><span class="label">Dividend Yield</span><span class="val" id="divYield">--</span></div>
+              <div class="data-row"><span class="label">Dividend Payout Ratio</span><span class="val" id="divPayoutRatio">--</span></div>
+              <div class="data-row"><span class="label">5-Year Avg Dividend Yield</span><span class="val" id="div5YrAvg">--</span></div>
+              <div class="data-row"><span class="label">50-Day Moving Average</span><span class="val" id="stat50DMA">--</span></div>
+              <div class="data-row"><span class="label">200-Day Moving Average</span><span class="val" id="stat200DMA">--</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 5: Company Profile -->
+      <section class="tab-pane" id="tab-profile">
+        <div class="profile-card-modern">
+          <div class="profile-top-bar">
+            <div class="profile-top-info">
+              <h3>Corporate Overview</h3>
+              <p>Key information regarding corporate operations and governance</p>
+            </div>
+            <a href="#" target="_blank" rel="noopener noreferrer" class="ext-website-btn" id="companyWebsiteLink">
+              Visit Official Website ↗
+            </a>
+          </div>
+
+          <div class="profile-facts-grid">
+            <div class="fact-box">
+              <span class="fact-lbl">Headquarters</span>
+              <span class="fact-val" id="profileLocation">--</span>
+            </div>
+            <div class="fact-box">
+              <span class="fact-lbl">Full-Time Employees</span>
+              <span class="fact-val" id="profileEmployees">--</span>
+            </div>
+            <div class="fact-box">
+              <span class="fact-lbl">Sector</span>
+              <span class="fact-val" id="profileSectorText">--</span>
+            </div>
+            <div class="fact-box">
+              <span class="fact-lbl">Industry</span>
+              <span class="fact-val" id="profileIndustryText">--</span>
+            </div>
+          </div>
+
+          <div class="profile-desc-block">
+            <h4>Description</h4>
+            <p id="businessSummary">--</p>
+          </div>
+
+          <div class="executives-block">
+            <h4>Key Executives & Leadership</h4>
+            <div class="execs-grid" id="executivesGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 6: Full News & Articles (All News Stream) -->
+      <section class="tab-pane" id="tab-news">
+        <div class="news-stream-header">
+          <div class="news-stream-title">
+            <h3>Live Market News Stream</h3>
+            <p>Click any story below to open and read the <strong>full article directly inside this website</strong>.</p>
+          </div>
+        </div>
+        <div class="full-news-grid" id="newsGridFull">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- =======================================================
+       IN-APP FULL ARTICLE READER MODAL
+       Opens inside the website without redirecting to Yahoo
+       ======================================================= -->
+  <div class="article-modal-backdrop hidden" id="articleModal">
+    <div class="article-modal-window">
+      <!-- Modal Navigation Bar -->
+      <div class="modal-top-bar">
+        <div class="modal-top-left">
+          <span class="modal-publisher-pill" id="modalPublisher">Yahoo Finance</span>
+          <span class="modal-read-time" id="modalReadTime">3 min read</span>
+          <span class="modal-pub-time" id="modalPublishTime">--</span>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn" title="Close article (ESC)">✕</button>
+      </div>
+
+      <!-- Modal Body Content -->
+      <div class="modal-scroll-body">
+        
+        <!-- Loading Shimmer inside Modal -->
+        <div class="modal-loader" id="modalLoader">
+          <div class="modal-sk-title"></div>
+          <div class="modal-sk-meta"></div>
+          <div class="modal-sk-img"></div>
+          <div class="modal-sk-para"></div>
+          <div class="modal-sk-para"></div>
+          <div class="modal-sk-para"></div>
+        </div>
+
+        <div class="article-full-content" id="modalArticleContent">
+          <h1 class="article-main-title" id="modalTitle">--</h1>
+          
+          <div class="article-byline-bar">
+            <div class="byline-avatar">✍️</div>
+            <div class="byline-text">
+              <span class="byline-author" id="modalAuthor">Market Reporter</span>
+              <span class="byline-src">Powered by Yahoo Finance Live Feed</span>
+            </div>
+          </div>
+
+          <div class="article-lead-image-wrap" id="modalImgWrap">
+            <img src="" alt="Article cover image" class="article-lead-image" id="modalImg">
+          </div>
+
+          <div class="article-story-paragraphs" id="modalParagraphs">
+            <!-- Full paragraphs inserted via JS -->
+          </div>
+
+          <div class="article-footer-nav">
+            <button class="close-article-action-btn" id="modalBottomCloseBtn">← Return to Dashboard</button>
+            <a href="#" target="_blank" rel="noopener noreferrer" class="source-link-btn" id="modalExternalLink">View Original Source ↗</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Site Footer -->
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <p>© 2026 FinScope | Institutional-Grade Company Fundamental Analysis Terminal</p>
+      <p class="footer-note">All market metrics, ratios, financial statements and news stories are dynamically retrieved via Yahoo Finance API.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

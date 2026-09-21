@@ -1,0 +1,13 @@
+{
+  "url": "https://www.thehindu.com/sci-tech/science/as-ai-marches-on-math-research-scholars-ponder-the-future/article71463202.ece",
+  "heading": "As AI marches on math research, scholars ponder the future",
+  "photo": "https://th-i.thgim.com/public/sci-tech/science/c71v9r/article71463929.ece/alternates/LANDSCAPE_1200/pexels-yankrukov-8197539.jpg",
+  "author": "Rohini Subrahmanyam",
+  "date": "2026-09-17T09:00:00+05:30",
+  "totalParagraphs": 3,
+  "paragraphs": [
+    "On July 20, mathematician Levent Alpöge, who works at the artificial intelligence company (AI) Anthropic, dropped a casual tweet on X. He claimed the company’s advanced large language model Claude Fable 5 had produced a counterexample to an 87-year-old open problem in algebraic geometry called the Jacobian conjecture. By working on it during the FIFA World Cup final, AI had helped disprove a conjecture that many mathematicians had been working on for decades — and the world got the news about it in a short social media post.",
+    "This was not AI’s first major mathematical conquest. On May 20, OpenAI released a series of tweets on X claiming that its internal, general reasoning model had found a solution to the planar unit distance problem, an open problem proposed by Hungarian mathematician Paul Erdős in 1946. Many expert mathematicians who verified the solution realised that if humans had solved this on their own, the result would be out in a top journal.",
+    "The floodgates were opened. On August 1, OpenAI announced that its newest model ‘Astra’ had solved ten more open maths problems, three of which were from the legendary list of Erdős problems that included the unit distance conjecture. AI had been solving other less exciting Erdős problems and International Math Olympiad questions even before tackling the unit distance problem — but this latest set had many people sit up and take notice. As Columbia University theoretical computer scientist Henry Yuen tweeted, “I didn’t just hear about these problems from my friends or from seminars. I feel their importance in my bones; I deeply care about the answers to these questions.”"
+  ]
+}

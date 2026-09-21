@@ -1,0 +1,83 @@
+==========================================================
+📰 HEADING:
+Job fit is in the stars: recruiters use astrology to make hiring decisions
+
+📸 PHOTO URL:
+https://th-i.thgim.com/public/education/iju0of/article71484326.ece/alternates/LANDSCAPE_1200/iStock-1875495774.jpg
+
+✍️ AUTHOR: Nivedhika  Krishnan
+📅 DATE: 2026-09-21T08:30:00+05:30
+🔗 URL: https://www.thehindu.com/education/job-fit-is-in-the-stars-recruiters-use-astrology-to-make-hiring-decisions/article71475582.ece
+==========================================================
+
+📝 CLEAN ARTICLE BODY:
+
+For Vishnu Vijayan, the four-stage interview process for an engineering position felt like a resounding success. The technical tests were smooth, and the initial three rounds with the lead engineer, helpdesk manager, and IT director went wonderfully. But the final conversation — held with the person he would report to — took an unexpected turn.
+
+After chatting casually about his performance, the hiring manager asked a question: “What’s your zodiac sign?” “I’m an Aquarius,” he replied, watching the smiles vanish from the room. The previous occupant of the role had been an Aquarius, and because the hiring managers were Geminis and Virgos, they deemed it a bad mix. “They didn’t laugh, and I wasn’t hired,” Mr. Vijayan recalled.
+
+Across industries, especially within fast-moving startups, informal astrology checks, gut-feeling compatibility tests, and quirky personality quizzes are quietly taking over the hiring room. While some brush it off as a harmless icebreaker, job seekers are left wondering where professional skills end and superstition begins.
+
+From local startups to international corporate spaces, some employers are screening candidates through two distinct lenses: Western zodiac sun signs and Indian Vedic astrology. Job seekers report running into these inquiries across multiple sectors. In casual startup and creative interviews, the method is fast and informal, with bosses checking sun signs to see if an applicant’s elemental makeup (fire, earth, water, etc.) gels with the leadership team.
+
+As recruiter Mansi Pandey observes, “If the boss is a fire, water sign, the whole company revolves around people who are inclined according to the horoscope of the boss’s sign. They won’t ask you what sign you are, but 99% of the time you’ll fall in if you’re in that group.”
+
+For Dolly Kaur, applying for a junior marketing role at a mid-sized company, the line was crossed when she hit a mandatory field on the application form, “Please list your astrological sign.”
+
+“I honestly froze,” Dolly says. “I don’t mind sharing my skills or even answering tricky behavioral questions, but zodiac signs? That feels super personal and completely irrelevant to whether I can do the job. It feels discriminatory, but maybe it’s just some HR gimmick.”
+
+This trend isn’t limited to just India. Siddarth Dixit, an electronics engineer, said, “I know a job portal in Taiwan uses a horoscope as one of the decisive factors in hiring. Some Asian bosses who believe in numerology insist on numerology readings for potential candidates.”
+
+The turn to the cosmos does not exist in a vacuum; it mirrors India’s massive, multi-million-dollar “faith-tech” boom.
+
+According to market analysis published in BizFin, the Indian astrology app market has scaled aggressively, with digital platforms surging toward unicorn valuations and multi-crore profits, seamlessly embedding astrological consultations deep into modern urban consumer habits. As tech startups and digital platforms scale at breakneck speed, founders and hiring managers increasingly bring these mainstream cultural beliefs straight into the interview room, merging ancient predictive systems with modern corporate culture.
+
+Companies have been increasingly turning to astrologers and numerologists for executive and personnel selections for over a decade, treating birth charts as an alternative lens for decoding human behavior.
+
+Recruiters who use these methods are driven by a specific logic. As tech startups and digital platforms scale at breakneck speed, founders and hiring managers increasingly bring these mainstream cultural beliefs straight into the interview room, merging ancient predictive systems with modern corporate culture.
+
+In fast-paced corporate environments where traditional resumes and standard aptitude tests often present rehearsed, carbon-copy answers, hiring managers look for shortcuts to gauge hidden personality traits, workplace resilience, and team chemistry.
+
+A corporate recruiter based in Gurugram explains, “When you are hiring for high-pressure leadership or core startup teams, standard interviews only show you what a candidate wants you to see. Looking at behavioral tendencies through an astrological or cosmic framework gives managers a pseudo-psychological shortcut — a way to guess how someone handles conflict, whether they are naturally impulsive or cautious, and how their working style will mesh with the founder’s personality.”
+
+Beyond casual sun-sign matching, organisations utilising these methods employ structured frameworks to evaluate candidate profiles. Rather than treating astrology as a rigid formula, these hiring managers use birth charts and astrological houses as alternative behavioural lenses to understand a candidate’s “hidden motivations, work ethics, and potential friction points within a team.”
+
+Detailing how this operates on the ground, a corporate recruiter based in Kolkata explains, “When companies integrate this into personnel selection, they are not just looking at a resume. They map specific focal points in a candidate’s chart — such as the second house for resource management and professional presentation, the sixth house for daily work routines, collaboration style, and task organisation, and the tenth house to gauge career trajectory and public-facing projection. It is used as a complementary behavioural audit to see if someone’s intrinsic working style aligns with the company’s internal rhythm.”
+
+Echoing this operational approach, a recruiter based in Hyderabad notes that some firms use these assessments to map interpersonal dynamics and prevent friction before it happens: “The core logic centers on team synergy and mitigating internal conflicts. By analysing elemental strengths or planetary distributions, managers attempt to anticipate how a candidate handles stress, whether they thrive in autonomous roles or structured hierarchies, and how their working temperament matches existing team members—framing it as an unconventional tool for emotional intelligence mapping.”
+
+To see these practices in action, companies across various regions have tailored their recruitment models in unique ways. For instance, a social media app based in Hyderabad integrates zodiac-based criteria directly into its hiring process to align employee characteristics with its user base of millennials interested in astrology, believing that team astrological harmony enhances its ability to create relatable content.
+
+Similarly, a wellness startup based in Pune incorporates astrology into its hiring to prioritise candidates with water signs, seeking the empathy and intuition crucial for trust and understanding in the mental health space. Meanwhile, specialised human resources consulting firms based in Ahmedabad assist businesses ranging from startups to established corporations with astrologically informed recruitment — such as helping a retail fashion brand build a creative team dominated by air signs, known for their innovative ideas and communication skills, which reportedly resulted in a surge in sales.
+
+For many professionals, questions about zodiac signs have shifted from casual chat to actual interview hurdles.
+
+Karthikeyan S. who is currently working in a start-up in Bengaluru recalls facing these questions routinely when he was looking roles in data science. “They just ask me for my date and time of birth so they can figure out my birth chart or cast spells, depending on where I work,” he noted. “That would only make sense if the interview was for a horoscope writer in some newspaper. If a potential boss asks you about your zodiac sign, you should end the interview immediately. You don’t want to work under an idiot.”
+
+Others have missed out on jobs simply because of their birth month. A data scientist, Priyadarshini, was told one of the reasons she did not get a role was that she was a Cancer — a sign the team considered “way too dramatic.” Years earlier, another interviewer seemed genuinely offended when Priyadarshini mentioned she wasn’t superstitious.
+
+Even creative spaces are jumping on board. Amritha Kalyani noted, “Several fashion designers, the old guard, the elitist ones, ask. I think it’s the height of it today that I’m over 30 years old, but back when I worked for those people, I thought it was really cool. It might seem like a harmless question to filter people by age, because you’ll have to give your date of birth.”
+
+Vijaya Subramaniam, an astrologer based in Thiruvananthapuram, said that several CEOs and human resource professionals from companies come to her for screening candidates. “The chart does and never tells you whether your idea is good or bad, It simply tells you whether you are built to execute it or not.”
+
+“The analysis starts with the ascendant and its lord, noting that signs like Aries, Capricorn, and Scorpio are frequently found in entrepreneurs and fast risers. Next comes the Moon, which must be stable and free of harsh afflictions to provide the emotional fuel needed for the founder rollercoaster”, she said. Practitioners often “look past the tenth house and focus first on the third house, which governs courage, initiative, and self-generated effort before any company or revenue exists.”
+
+Reflecting on his own family’s work ethic and chart observations, a Bengaluru-based recruiter notes, “It really depends on what the work is, but for most things I’d look for Mars and/or Saturn in the 6th House. My grandmother has both of these placements and is not only the hardest-working person I’ve known; she actually gets a lot of energy and satisfaction from work.”
+
+Astrologers also use traditional categorical rules to map out professions, linking Mars to engineering and medicine, Mercury to IT and finance, and Jupiter to banking and teaching.
+
+Astrologers spend hours looking at birth charts, planetary cycles, and matching star signs to figure out if someone is entering a “golden period” for their career. Some practitioners even claim they can spot patterns for government jobs based on how planets like the Sun and Saturn interact in a chart.
+
+Pandit Rohit Pant, an astrologer based in Chandigarh, recalls a particular case with a company. “A reputed corporate company had already conducted all interview rounds and shortlisted ten candidates for five key positions. But before giving offer letters, they shared the birth details of all ten candidates with me for astrological recommendations. I prepared a separate chart for the company along with the candidates to check character traits, past, present, and future timelines, doshas, yogas, and whether the candidate would stay or switch jobs. It is simple, yet it works much like traditional marriage matching. Akin to matching horoscopes, we check Kendra houses — such as the 4th, 7th, and 10th — to determine if their energies will clash, and evaluate compatibility using the 36 Guna system. If the score is more than 18, we advise them to proceed,” he said.
+
+Recruiters admit that unspoken biases run deep. The intersection of astrology and business is not just a tool for job seekers; it is increasingly driving modern tech ventures. Entrepreneurs building products in the spiritual and esoteric space have found that traditional startup rules apply regardless of the niche.
+
+However, looking at why founders and high-pressure leaders lean toward the cosmos in the first place, entrepreneur Anupriya Anandan notes the deep psychological pull of uncertainty. “When building a startup, the weight of complete unknowns, constant ambiguity, and relentless pressure makes the human mind search for anchors. Looking at horoscopes or charts often becomes a comforting psychological coping mechanism to find a sense of control in an uncontrollable environment.”
+
+Even so, balancing that instinct with operational reality, Mr. Anandan cautions against letting predictive tools replace hard work. “Relying on horoscopes to validate business decisions is a shortcut that undermines real execution. True entrepreneurial success comes from resilience, relentless problem-solving, and adapting to market realities, not from looking at stars to dictate your next strategic move,” he said.
+
+Despite intricate chart analysis, planetary alignments, and startup compatibility tests, job seekers living in the real world know that the stars do not pay the bills. Vaishnavi Jadhav, a non-believer who spent years working on a contractual basis at a government university, knows this disconnect well. An astrologer once told him she should have landed a permanent government job before turning 25. Now 37, Vaishnavi Jadhav looks back at the prediction with a shrug. In the end, navigating job hunts and professional uncertainty comes down to hard work and real experience — leaving astrology safely outside the office door.
+
+(Nivedhika Krishnan is a freelance journalist based in Coimbatore)
+
+==========================================================

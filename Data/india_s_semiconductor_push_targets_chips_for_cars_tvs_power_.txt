@@ -1,0 +1,41 @@
+==========================================================
+📰 HEADING:
+India's semiconductor push targets chips for cars, TVs, power infra: Vaishnaw
+
+📸 PHOTO URL:
+https://th-i.thgim.com/public/incoming/oab0n0/article71488408.ece/alternates/LANDSCAPE_1200/PTI09_19_2026_000600B.jpg
+
+✍️ AUTHOR: PTI
+📅 DATE: 2026-09-20T19:57:28+05:30
+🔗 URL: https://www.thehindu.com/news/national/indias-semiconductor-push-targets-chips-for-cars-tvs-power-infra-vaishnaw/article71488287.ece
+==========================================================
+
+📝 CLEAN ARTICLE BODY:
+
+India wants its semiconductor capabilities to reach into everyday products, including cars, televisions and refrigerators, as well as critical power infrastructure in the coming years, Union Electronics and IT Minister Ashwini Vaishnaw said, outlining the wide-ranging chip-making prowess the country aims to build.
+
+The Minister’s vision comes as India steps up efforts to establish a larger presence in the global semiconductor value chain, with the government seeking to move beyond chip assembly and testing, and build capabilities spanning design, fabrication, equipment and materials. Under the second phase of the semiconductor programme, the government has committed ₹1.27 lakh crore to expand the domestic ecosystem and attract global investments.
+
+Investor interest valued at about ₹1 lakh crore had been received under the second phase of the semiconductor scheme, the government recently said, and this week saw a slew of big ticket announcements, including Applied Materials’ $5 billion India plan through to 2035, Lam Research’s proposed ₹10,000-crore investment, Tata Electronics’ 363-acre vendor park at Dholera, and Fujifilm’s ₹800-crore semiconductor materials plant.
+
+India should be designing and manufacturing chips for cars, power systems, televisions, refrigerators and other appliances within the next five years, Mr. Vaishnaw said in an interview to PTI.
+
+“There are many chips which go in automobiles, in cars, scooters and motorcycles, that are manufactured in our country. We should be able to have many of those chips designed and manufactured in India,” the Minister said, adding that a similar capability should be developed in the power sector, including chips used in transmission lines, transformers and converters.
+
+“There are many chips which go into the power sector, for example, the transmission lines, the transformers and the converters. We should be able to manufacture many of those chips, which are designed and made in India,” he said.
+
+In the consumer electronics space, Mr. Vaishnaw said, many of the chips used in televisions, refrigerators and other household appliances should also be designed and manufactured in India.
+
+“...we don’t really see the chip; we see the finished product. When we buy a TV, we don’t see the chip inside it, but it is the chip which is driving the entire thing,” he said, describing the semiconductor as the “brain” and “heart” of a television.
+
+“So once we move in that direction, it will be very good,” he added.
+
+Mr. Vaishnaw cited a display-control module plant coming up in Uttar Pradesh as an example of the capabilities India is seeking to build. The module controls how a television displays the final picture, and it will be manufactured in the country, he said.
+
+The Minister also pointed to the planned LED display fabrication facility by Crystal Matrix, saying the company has gone down to a complex level of 40 microns from 90 microns, and was setting up a research and development facility in India.
+
+“All those large screens, LED screens, will be manufactured and designed in India,” Mr. Vaishnaw said, adding that many such products would increasingly be designed and manufactured domestically.
+
+ministers (government) / semiconductors and active components
+
+==========================================================

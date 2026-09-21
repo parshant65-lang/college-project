@@ -1,0 +1,61 @@
+==========================================================
+📰 HEADING:
+Why the Supreme Court struck down Maharashtra’s methanol rules? | Explained
+
+📸 PHOTO URL:
+https://th-i.thgim.com/public/incoming/k5u095/article71484672.ece/alternates/LANDSCAPE_1200/IMG_iStock-1420925839_2_1_0CEGA4EG.jpg
+
+✍️ AUTHOR: Rizmi Lia M.
+📅 DATE: 2026-09-19T17:56:29+05:30
+🔗 URL: https://www.thehindu.com/news/national/why-the-supreme-court-struck-down-maharashtras-methanol-rules-explained/article71484515.ece
+==========================================================
+
+📝 CLEAN ARTICLE BODY:
+
+The story so far: The Supreme Court on Friday (September 18, 2026) has struck down Maharashtra government rules requiring methanol to be denatured with a colourant and bitterant before sale to non-drug manufacturers, holding that the measures were disproportionate and did not have a sufficient connection with the problem they sought to address.
+
+A Bench of Justice J.B. Pardiwala and Justice K. Vinod Chandran allowed the writ petitions filed by the methanol-based product manufacturers against the mandatory inclusion of additives in methanol because of amendments to the Maharashtra Poisons Rules, 1972, which had affected the quality and usability of their products
+
+Methanol, or methyl alcohol, is a highly toxic substance. It is also widely used as an industrial raw material in products including formaldehyde, paraformaldehyde, paints, resins and other chemicals.
+
+The Maharashtra government introduced stricter controls on methanol following a 1991 hooch tragedy in Mumbai, in which around 93 people died after consuming spurious liquor containing methanol. A committee headed by then Additional Director General of Police P.R. Parthasarthy was subsequently constituted to examine the causes of the tragedy and suggest measures.
+
+In 2011, Maharashtra amended its Poisons Rules and introduced Rules 18A and 18B.
+
+The petitioners are aggrieved by the operation of impugned rules 18A and 18B of the Maharashtra Poisons Rules, respectively, which restrict purchase of methanol, and mandate the addition of bitterant and colourant to methanol before sale to a non-drug manufacturer. Further, by operation of Rule 18B, any possession of methanol without a licence in Form A is liable to confiscation. The practical hardship for the petitioners lies in the fact that after addition of the denaturant, their final products are not acceptable by other industries.
+
+Companies told the court that colour contamination could make products unacceptable to the paint and pharmaceutical industries, while the additives could affect catalysts, laboratory and pharmaceutical applications.
+
+The State, however, argued that the rules were necessary because methanol could be mixed with liquor and cause fatal poisoning. According to the State, making methanol identifiable and bitter would help prevent its misuse.
+
+The central question was whether Rules 18A and 18B violated Articles 14 and 19(1)(g) of the Constitution.
+
+The basic tenet of Article 14 is fairness in action and non-arbitrariness, while Article 19(1)(g) protects the right to carry on an occupation, trade or business. The court said that the State does have the power to regulate methanol. The Poisons Act, 1919 permits State governments to make rules regulating the possession and sale of poisons.
+
+But the question before the court was whether Rules 18A and 18B, respectively, of the Maharashtra Poisons Rules could be said to be arbitrary, disproportionate, and unreasonable.
+
+The Supreme Court held that the impugned provisions of the Maharashtra Poisons Rules, 1972, were unconstitutional. It concluded that the rules violated Articles 14 and 19(1)(g) of the Constitution.
+
+The court found that Rule 18A(1), which required verification of a purchaser’s Form A licence before methanol could be sold, imposed a disproportionate restriction on legitimate industrial users. The court held that merely verifying a Form A licence did not establish how the purchaser would use methanol and could prevent legitimate manufacturers from obtaining it.
+
+The court also struck down Rule 18A(2), which required methanol sold to non-drug manufacturers to be mixed with a colourant and bitterant. It held that the requirement did not have a reasonable and proximate nexus with preventing the misuse of methanol in illicit liquor. The State had failed to demonstrate that the additives would prevent diversion or manufacture of spurious liquor, while the requirement imposed continuing burdens on legitimate industries.
+
+“What is discernable from the above is that in practicality, the impugned rules prescribe a regulatory framework that does not prevent the misuse of methanol in liquor which takes place in the unregulated field. The sub-rule even in the best case of full compliance cannot prevent the misuse it aims to prevent. Thus, it cannot be said to bear a reasonable and proximate nexus with the object it seeks to achieve. It addresses a mischief, it does not in fact remedy while imposing a continuous burden on the industries,” observed the court.
+
+As for Rule 18B, which provided for confiscation of methanol possessed without a Form A licence, the court found that it could conflict with the lawful possession of methanol under a Form B permit and effectively render that permit redundant. The provision, therefore, also failed the proportionality test.
+
+Applying the proportionality framework laid down in K.S. Puttaswamy v. Union of India (2017), the court held that although the prevention of loss of life from methanol-adulterated liquor constituted a legitimate aim, the impugned restrictions were neither suitable nor necessary to achieve that objective.
+
+The court consequently allowed the writ petitions, disposed of the connected civil appeal, and held that the impugned rules were violative of Articles 14 and 19(1)(g). The court noted that “a policy that is irrational, or lacks rational justification, or is violative of any constitutional, statutory or any other provision of law is liable to be struck down”.
+
+The court passed the guidelines regarding important aspects and steps to prevent hooch tragedies and for effective implementation of the policies.
+
+As regards cooperation and working of various departments, the court said States should work together through the Prohibition, Excise, Police, Transport, Industries and Health departments, along with NGOs, to prevent illegal liquor. This includes checking State borders, stopping illegal transport, identifying places where illicit liquor is made or stored, and monitoring industrial units that may illegally supply chemicals used to make spurious liquor.
+
+As regards the existing rules in States/Union Territories, the court said methanol rules should be strengthened. Licences should be granted only after proper verification and should be regularly reviewed. Industrial users should return unused or excess methanol, maintain proper stock and consumption records, and face suspension or cancellation of licences for violations. Methanol should be transported in dedicated tankers under Excise supervision and sealed in a way that prevents theft, diversion or tampering.
+
+As regards health and awareness, the court said States should have a system to deal with hooch tragedies, including properly equipped hospitals and disaster-management plans. It also called for more de-addiction centres, support for affected families and local counselling centres. Governments and NGOs should conduct awareness campaigns and encourage people to report violations of alcohol laws.
+
+The court added that while it could issue directions, effective implementation ultimately depends on the police and enforcement machinery.
+
+==========================================================
