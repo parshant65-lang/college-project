@@ -8,6 +8,26 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
+// Master History Registry: remembers all scraped URLs forever
+// Even if local articles are deleted to save disk space!
+const historyFile = path.join(__dirname, 'history.txt');
+const scrapedHistory = new Set();
+
+if (fs.existsSync(historyFile)) {
+  const lines = fs.readFileSync(historyFile, 'utf8').split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed) scrapedHistory.add(trimmed);
+  }
+}
+
+function recordInHistory(url) {
+  if (!scrapedHistory.has(url)) {
+    scrapedHistory.add(url);
+    fs.appendFileSync(historyFile, url + '\n');
+  }
+}
+
 // Polite delay
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -38,6 +58,11 @@ const ignorePhrases = [
  */
 async function scrapeSingleArticle(articleUrl) {
   try {
+    // 0. Instant History Check: Skip immediately if already in master history registry
+    if (scrapedHistory.has(articleUrl)) {
+      return { status: 'skipped', heading: 'Already in history registry', filename: '' };
+    }
+
     const res = await fetch(articleUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -77,6 +102,7 @@ async function scrapeSingleArticle(articleUrl) {
 
     // If already downloaded previously, skip quickly!
     if (fs.existsSync(txtFilePath) || fs.existsSync(path.join(dataDir, `${safeFilename}.txt`))) {
+      recordInHistory(articleUrl);
       return { status: 'skipped', heading, filename: safeFilename };
     }
 
@@ -135,6 +161,9 @@ async function scrapeSingleArticle(articleUrl) {
 
     // Update latest.txt in main Data folder
     fs.writeFileSync(path.join(dataDir, 'latest.txt'), readableText);
+
+    // Record URL in master history registry
+    recordInHistory(articleUrl);
 
     return { status: 'saved', heading, photo, paragraphsCount: paragraphs.length, filename: `${today}/${safeFilename}` };
   } catch (err) {
@@ -291,6 +320,13 @@ async function crawlAllArticles(baseUrl, concurrency = 5) {
       const index = currentIndex++;
       const url = articleLinks[index];
       const progress = `[${index + 1}/${total}] (${Math.round(((index + 1) / total) * 100)}%)`;
+
+      // Instant history check: skip without making network request!
+      if (scrapedHistory.has(url)) {
+        console.log(`${progress} ⏩ Skipped (already in history.txt): ${url.slice(0, 50)}...`);
+        skippedCount++;
+        continue;
+      }
 
       const result = await scrapeSingleArticle(url);
       if (result) {
