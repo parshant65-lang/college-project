@@ -1,0 +1,33 @@
+==========================================================
+📰 HEADING:
+Government dissolves 37-year-old Digital Communications Commission
+
+📸 PHOTO URL:
+https://th-i.thgim.com/public/news/national/qa3fm/article71492204.ece/alternates/LANDSCAPE_1200/iStock-1223957183.jpg
+
+✍️ AUTHOR: PTI
+📅 DATE: 2026-09-21T19:56:55+05:30
+🔗 URL: https://www.thehindu.com/news/national/government-dissolves-37-year-old-digital-communications-commission/article71492164.ece
+==========================================================
+
+📝 CLEAN ARTICLE BODY:
+
+The government has notified the dissolution of the Digital Communications Commission, an apex inter-departmental decision-making body at the Department of Telecom formed around 37 years ago to decide on policy matters and subjects with significant financial implications.
+
+Formed in 1989 as the Telecom Commission, it was renamed as the Digital Communications Commission in 2018.
+
+"The Government of India has decided that the Digital Communications Commission be dissolved. Now, therefore, with effect from the date of publication of this resolution, the Digital Communications Commission shall stand dissolved," a notification dated September 19 said.
+
+The apex decision-making body comprising senior officials from NITI Aayog, the Finance Ministry, the Department of Industrial Policy and Promotion and other departments helped resolve contentious issues. The Commission firmed up decisions on the majority of telecom matters before they were sent to the Cabinet for final approval.
+
+The Commission helped in taking decisions on matters like spectrum price and recommendations by the Telecom Regulatory Authority of India.
+
+The body held its last meeting on September 3, where it firmed up the decision on satcom spectrum. Elon Musk-led Starlink, Bharti Group-backed Eutelsat OneWeb and Reliance Industries Ltd's Jio Satellite Communications have received permission to start satcom services in India.
+
+The services, however, cannot be rolled out without spectrum allocation and the second stage of security clearance from security agencies.
+
+The DCC has approved the majority of suggestions given by the telecom regulator Trai. Its recommendation on satcom spectrum now has to be approved by the cabinet.
+
+communication infrastructure / government / telecommunication service
+
+==========================================================
