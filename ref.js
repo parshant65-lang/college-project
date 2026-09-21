@@ -68,7 +68,8 @@ function getSourceName(url) {
     if (host.includes('indiatoday')) return 'India Today';
     if (host.includes('bbc')) return 'BBC News';
     if (host.includes('livemint')) return 'LiveMint';
-    if (host.includes('timesofindia')) return 'Times of India';
+    if (host.includes('timesofindia') || host.includes('indiatimes')) return 'Times of India';
+    if (host.includes('aajtak')) return 'Aaj Tak';
     return host.replace('www.', '').split('.')[0].toUpperCase();
   } catch (e) {
     return 'News';
@@ -189,8 +190,8 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
 
     // Clean up heading
     heading = heading.replace(/\s+/g, ' ')
-      .replace(/\|\s*(Bloomberg|The Hindu|Indian Express|Hindustan Times|NDTV|India Today|BBC).*$/i, '')
-      .replace(/-\s*(Bloomberg|The Hindu|Indian Express|Hindustan Times|NDTV|India Today|BBC).*$/i, '')
+      .replace(/\|\s*(Bloomberg|The Hindu|Indian Express|Hindustan Times|NDTV|India Today|BBC|Aaj Tak|LiveMint|Times of India).*$/i, '')
+      .replace(/-\s*(Bloomberg|The Hindu|Indian Express|Hindustan Times|NDTV|India Today|BBC|Aaj Tak|LiveMint|Times of India).*$/i, '')
       .trim();
 
     if (!heading || heading.length < 5 || paragraphs.length === 0) return null;
@@ -273,7 +274,7 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
 
 /**
  * 2. MASTER MULTI-SOURCE REGISTRY
- * Configured with Bloomberg News + Top Indian and Global News Networks
+ * All Major Global & Indian News Networks
  */
 const NEWS_SOURCES = [
   {
@@ -353,72 +354,83 @@ const NEWS_SOURCES = [
       { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'World' },
       { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', category: 'Business' }
     ]
+  },
+  {
+    name: 'LiveMint',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://www.livemint.com/rss/news', category: 'Latest' },
+      { url: 'https://www.livemint.com/rss/markets', category: 'Markets' },
+      { url: 'https://www.livemint.com/rss/companies', category: 'Companies' }
+    ]
+  },
+  {
+    name: 'Times of India',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms', category: 'Top Stories' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/1898055.cms', category: 'Business' }
+    ]
+  },
+  {
+    name: 'Aaj Tak',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://www.aajtak.in/rssfeeds/?id=home', category: 'Top News' },
+      { url: 'https://www.aajtak.in/rssfeeds/?id=national', category: 'National' },
+      { url: 'https://www.aajtak.in/rssfeeds/?id=business', category: 'Business' }
+    ]
   }
 ];
 
 /**
- * 3. Master Multi-Source Discovery
- * Scans ALL configured news websites via Sitemaps and RSS feeds
+ * 3. Master Multi-Source Parallel Discovery
+ * Scans ALL configured news websites simultaneously in parallel!
  */
 async function discoverAllNewsSources() {
   console.log(`\n==========================================================`);
-  console.log(`🌐  UNIVERSAL MULTI-SOURCE NEWS SCANNER`);
-  console.log(`📡  Scanning ${NEWS_SOURCES.length} major news networks simultaneously...`);
+  console.log(`🌐  UNIVERSAL AUTOMATED MULTI-SOURCE ENGINE`);
+  console.log(`📡  Scanning ${NEWS_SOURCES.length} major news networks simultaneously in parallel...`);
   console.log(`==========================================================`);
 
   const allArticles = new Set();
+  const sourceStats = {};
 
-  for (const src of NEWS_SOURCES) {
-    console.log(`\n🔍 Source: ${src.name}`);
+  // Scan all sources in parallel!
+  await Promise.all(NEWS_SOURCES.map(async (src) => {
     let srcCount = 0;
 
-    // 1. Sitemaps
-    for (const smUrl of src.sitemaps) {
+    // A. Sitemaps in parallel
+    const smPromises = (src.sitemaps || []).map(async (smUrl) => {
       try {
-        process.stdout.write(`   Scanning Sitemap: ${smUrl} ... `);
         const res = await fetch(smUrl, {
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36' }
         });
-        if (!res.ok) {
-          console.log(`skipped (${res.status})`);
-          continue;
-        }
+        if (!res.ok) return;
 
         const xml = await res.text();
         const locMatches = xml.match(/<loc>(.*?)<\/loc>/gi) || [];
-        let added = 0;
 
         for (const locTag of locMatches) {
           const cleanUrl = locTag.replace(/<\/?loc>/gi, '').trim().split('?')[0].split('#')[0];
           if (cleanUrl.startsWith('http') && (cleanUrl.includes('/article') || cleanUrl.includes('.ece') || cleanUrl.includes('.html') || cleanUrl.match(/\/\d{5,}/))) {
-            if (!allArticles.has(cleanUrl)) {
-              allArticles.add(cleanUrl);
-              added++;
-              srcCount++;
-            }
+            allArticles.add(cleanUrl);
+            srcCount++;
           }
         }
-        console.log(`✅ +${added} articles`);
-      } catch (e) {
-        console.log(`failed`);
-      }
-    }
+      } catch (e) {}
+    });
 
-    // 2. RSS Feeds (Includes Bloomberg News Feeds)
-    for (const feed of src.rssFeeds) {
+    // B. RSS Feeds in parallel
+    const rssPromises = (src.rssFeeds || []).map(async (feed) => {
       try {
-        process.stdout.write(`   Scanning RSS: ${feed.url} ... `);
         const res = await fetch(feed.url, {
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
         });
-        if (!res.ok) {
-          console.log(`skipped (${res.status})`);
-          continue;
-        }
+        if (!res.ok) return;
 
         const xml = await res.text();
         const $ = cheerio.load(xml, { xmlMode: true });
-        let added = 0;
 
         $('item').each((_, el) => {
           let link = $(el).find('link').text().trim().split('?')[0].split('#')[0];
@@ -427,7 +439,6 @@ async function discoverAllNewsSources() {
           const pubDate = $(el).find('pubDate').text().trim();
 
           if (link.startsWith('http')) {
-            // Cache rich metadata for Bloomberg and paywalled news
             rssMetadataCache.set(link, {
               title,
               description,
@@ -436,29 +447,49 @@ async function discoverAllNewsSources() {
               source: src.name
             });
 
-            if (!allArticles.has(link)) {
-              allArticles.add(link);
-              added++;
-              srcCount++;
-            }
+            allArticles.add(link);
+            srcCount++;
           }
         });
-        console.log(`✅ +${added} articles`);
-      } catch (e) {
-        console.log(`failed`);
-      }
-    }
+      } catch (e) {}
+    });
 
-    console.log(`   📊 ${src.name} Total Contributed: ${srcCount} articles`);
+    await Promise.all([...smPromises, ...rssPromises]);
+    sourceStats[src.name] = srcCount;
+    console.log(`   ⚡ [CONNECTED] ${src.name.padEnd(20)}: ${srcCount} articles found`);
+  }));
+
+  const articlesArray = Array.from(allArticles);
+
+  // Round-robin interleave across sources so workers scrape all websites simultaneously!
+  const sourceQueues = {};
+  for (const url of articlesArray) {
+    const sName = getSourceName(url);
+    if (!sourceQueues[sName]) sourceQueues[sName] = [];
+    sourceQueues[sName].push(url);
   }
 
-  return Array.from(allArticles);
+  const interleavedArticles = [];
+  let hasMore = true;
+  let round = 0;
+  while (hasMore) {
+    hasMore = false;
+    for (const sName of Object.keys(sourceQueues)) {
+      if (round < sourceQueues[sName].length) {
+        interleavedArticles.push(sourceQueues[sName][round]);
+        hasMore = true;
+      }
+    }
+    round++;
+  }
+
+  return interleavedArticles;
 }
 
 /**
  * 4. Master Parallel Crawler Engine
  */
-async function crawlAllArticles(concurrency = 6) {
+async function crawlAllArticles(concurrency = 8) {
   const articleLinks = await discoverAllNewsSources();
   const total = articleLinks.length;
 
@@ -481,15 +512,16 @@ async function crawlAllArticles(concurrency = 6) {
   console.log(`\n==========================================================`);
   console.log(`🎯 TOTAL ARTICLES DISCOVERED ACROSS ALL SOURCES: ${total}`);
   console.log(`⏰ Run Session Folder: Data/${dateFolder}/${timeFolder}/`);
-  console.log(`⚡ Concurrency: ${concurrency} parallel workers`);
-  console.log(`🚀 Starting multi-source download of ALL ${total} articles...`);
+  console.log(`⚡ Concurrency: ${concurrency} parallel multi-source workers`);
+  console.log(`🚀 All news websites are now working TOGETHER simultaneously!`);
   console.log(`==========================================================\n`);
 
   let savedCount = 0;
   let skippedCount = 0;
   let currentIndex = 0;
+  const savedBySource = {};
 
-  // Worker queue
+  // Parallel Worker pool
   async function worker(workerId) {
     while (currentIndex < articleLinks.length) {
       const index = currentIndex++;
@@ -507,14 +539,13 @@ async function crawlAllArticles(concurrency = 6) {
         if (result.status === 'skipped') {
           skippedCount++;
         } else {
+          savedBySource[result.source] = (savedBySource[result.source] || 0) + 1;
           console.log(`${progress} ✅ [SAVED] [${result.source}] [${result.category}]: "${result.heading.slice(0, 38)}..." (${result.paragraphsCount} paras)`);
           savedCount++;
         }
-      } else {
-        // Not a standard article or video link
       }
 
-      await sleep(150);
+      await sleep(100);
     }
   }
 
@@ -527,6 +558,10 @@ async function crawlAllArticles(concurrency = 6) {
   console.log(`   ⏩ Already Downloaded       : ${skippedCount}`);
   if (savedCount > 0) {
     console.log(`   📂 Saved In This Run Folder : Data/${dateFolder}/${timeFolder}/`);
+    console.log(`\n📊 Breakdown of Newly Saved Articles by Website:`);
+    for (const [srcName, count] of Object.entries(savedBySource)) {
+      console.log(`      * ${srcName.padEnd(20)}: ${count} articles`);
+    }
   } else {
     console.log(`   ℹ️ No new articles were published since the last run.`);
   }
@@ -535,6 +570,7 @@ async function crawlAllArticles(concurrency = 6) {
 
 // --------------------------------------------------------------------------
 // Start Script
+// Running 'node ref.js' automatically crawls ALL news websites together!
 // --------------------------------------------------------------------------
 const target = process.argv[2];
 
@@ -544,6 +580,6 @@ if (target && target.startsWith('http')) {
     if (res) console.log(`✅ Saved: ${res.filename}.json`);
   });
 } else {
-  // Crawl ALL configured news sources (Bloomberg News, The Hindu, Indian Express, Hindustan Times, NDTV, India Today, BBC)
-  crawlAllArticles(6);
+  // Master automatic run: All websites work together simultaneously!
+  crawlAllArticles(8);
 }
