@@ -1,0 +1,26 @@
+{
+  "source": "Hindustan Times",
+  "url": "https://www.hindustantimes.com/world-news/a-grail-cancer-test-for-the-fda-101789980087836.html",
+  "heading": "A Grail Cancer Test for the FDA",
+  "category": "World news",
+  "photo": "https://www.hindustantimes.com/ht-img/img/2026/09/21/1600x900/logo/im-50540553_1789980091548_lr0c_1789980105868_0sIO_d2e50958-c0e2-4c52-854c-4a3051a55da4_Ceeu.jpg",
+  "author": "",
+  "date": "2026-09-21T14:11:51+05:30",
+  "totalParagraphs": 14,
+  "paragraphs": [
+    "Artificial intelligence could lead to new cures and better diagnostics, but let’s hope bureaucrats don’t get in the way. An early test comes Wednesday when an outside advisory committee to the Food and Drug Administration will review Grail’s multi-cancer early detection test.",
+    "Grail’s Galleri test leads a fast-developing field of liquid biopsies that screen asymptomatic patients for signals of cancer in blood. The goal is to diagnose cancers earlier when they are easier to treat, and the odds of survival are higher.",
+    "In development for a decade, Galleri looks for DNA shed by cancer cells. The DNA is tagged by molecules specific to a cancer’s origin—say, the colon or pancreas. Grail uses genetic sequencing and machine learning to recognize links between these DNA signatures and particular cancers.",
+    "A randomized controlled trial conducted with the U.K.’s National Health Service tracked about 142,000 asymptomatic patients ages 50 to 77. Half received the Galleri test every year. Galleri caught four times as many cancers in total than the U.K.’s four recommended screenings for colon, breast, lung and cervical cancer.",
+    "The test also increased diagnoses of the 12 most deadly cancers at stages one and two by 16%. Critics say Galleri didn’t reduce the total number of stage three and four cancers that were diagnosed compared to the control group, but this ignores that Grail’s test caught advanced cancers earlier than they otherwise would have been.",
+    "Diagnoses of stage three cancers increased by 25% compared to the control group, while diagnoses for stage four declined 14%. Reductions in stage four cancer diagnoses grew the longer the trial went on, which strongly suggests that the tests were detecting cancers at earlier stages. A diagnosis at stage three rather than four can be life-saving.",
+    "Patients diagnosed with colon cancer at stage four have an estimated 11% odds of surviving five years, versus 64% if they are diagnosed at stage three. The disparities are also large for other deadly cancers such as bladder (6% vs. 32%), ovarian (16% vs. 32%), stomach (5% vs. 25%) and head and neck (38% vs. 55%).",
+    "The NHS trial’s findings are supported by a large study that tracked 36,000 patients in North America over age 50. Galleri detected 6.5 times as many cancers as screenings recommended by the U.S. Preventive Services Task Force. More than half of cancers detected were at early stages, and 73% don’t have recommended screenings.",
+    "Some patients will receive false positives and then undergo potentially costly and invasive follow-up evaluations. But fewer than half of initial positive findings are false alarms, and 85% of follow-up evaluations are non-invasive. Why not let patients and doctors weigh the trade-offs?",
+    "The test is currently available with a doctor’s prescription under a separate regulatory pathway for lab-developed tests, which are overseen by the Centers for Medicare and Medicaid Services. But patients must typically pay for the test out of pocket (current price: $799) because Medicare and most insurers don’t cover it.",
+    "The real reason some so-called experts oppose FDA approval is because it could lead to government and private insurance coverage. This is the same crowd that opposes accelerated approvals of innovative cancer medicines. They want to ration care. Former FDA biologics chief Vinay Prasad laments that existing cancer screenings are too costly.",
+    "Dr. Prasad and fellow paternalists say multi-cancer early detection tests should show a mortality benefit in controlled trials. That would delay FDA approval by years. Their reasoning is that even if tests detect cancers earlier and improve cancer survival, many older patients will die anyway from other causes. Better they die sooner from an advanced cancer than live longer and consume more healthcare. This is really how this crowd thinks.",
+    "They ignore how Galleri and follow-on detection tests could improve cancer survival over time by enabling drug makers to develop and test medicines in earlier disease stages. Such tests will become more accurate as access expands because AI will harness more patient data to identify signals with more precision.",
+    "A blood test that can detect cancers in their infancy is a long-sought holy grail of medicine, and Galleri represents important progress."
+  ]
+}

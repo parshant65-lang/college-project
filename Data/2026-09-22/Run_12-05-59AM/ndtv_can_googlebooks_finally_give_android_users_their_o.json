@@ -1,0 +1,22 @@
+{
+  "source": "NDTV",
+  "url": "https://www.ndtvprofit.com/technology/can-googlebooks-finally-give-android-users-their-own-mac-and-iphone-experience-12077429",
+  "heading": "Can Googlebooks Finally Give Android Users Their Own Mac-And-iPhone Experience?",
+  "category": "Technology",
+  "photo": "https://c.ndtvimg.com/2026-09/k4v9kj3s_googlebooks_625x300_21_September_26.jpeg?im=FaceCrop,algorithm=dnn,width=1600,height=900",
+  "author": "",
+  "date": "",
+  "totalParagraphs": 10,
+  "paragraphs": [
+    "Nearly five months after announcing Googlebooks, Google used a New York press event to detail what separates the platform from ChromeOS.",
+    "Android president Sameer Samat argued the market has a gap, saying \"there isn't a laptop platform built to work seamlessly with your Android phone,\" and framed the opportunity as one of timing, since laptop design predates the smartphone era.",
+    "Visually, Googlebooks resemble ChromeOS closely, keeping the same app dock, Chrome browser, and Play Store access. Underneath, though, Android now powers the system, alongside a separate Linux environment for developers and the same Titan security chip and malware protection found on Chromebooks. That shared Android foundation is what enables tighter phone integration and lets Google develop across both platforms from a common codebase.",
+    "Logging in now pulls in saved passwords, Wi-Fi networks and message history automatically. A \"continue on\" feature hands off apps between phone and laptop, demonstrated with BandLab, where an in-progress multi-track session moved over almost instantly.",
+    "Bringing a phone near a logged-in Googlebook also surfaces an app suggestion in the dock, and Gmail was shown opening automatically in its web interface when handed off from the phone app. Phones also appear inside the new Files app for easy file transfers, and a dock icon allows casting apps from phone to laptop screen via streaming rather than full mirroring.",
+    "Microsoft's \"Link to Windows\" already offers similar mirroring with over a billion downloads, and Android-to-Chromebook streaming isn't new either, so how much of an edge this integration provides remains unclear.",
+    "The standout AI feature, Magic Cursor, works like an advanced screenshot tool: a trackpad gesture turns the cursor into a Gemini-powered selector that can grab screen elements, windows, or the full display, then combine multiple selections into one Gemini request. In a demo, a running-metrics screen and a doctor's note were combined to ask Gemini about injury risk, with support for ongoing follow-up questions and Android's proactive suggestion feature carried over as well.",
+    "Rambler, the transcription tool from the Pixel 11, cleans up unstructured speech on Googlebooks too. Create Your Widget, which lets users describe and generate custom widgets via Gemini, hasn't launched on Android phones yet, so its Googlebook timing is unconfirmed. Every Googlebook also includes a free year of Google AI Pro (normally $199/year), bundling 5TB of Drive storage and various AI and subscription perks.",
+    "Five partners, Acer, ASUS, Dell, HP and Lenovo, are launching Googlebooks. Acer's base model starts at $899, the cheapest of the five but pricier than most Chromebooks. All models include at least 16GB of RAM, with most featuring 2.8K OLED touchscreens except Dell's compact model at 2.5K. Pre-orders are open now, with units arriving in US stores October 4 and the UK, Canada, Ireland, France, Germany and Australia the next day.",
+    "Essential Business Intelligence, Sharp Market Insights, Practical Personal Finance Advice, Daily Fuel, Gold and Silver Prices and Latest Stories — On NDTV Profit."
+  ]
+}

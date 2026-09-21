@@ -1,0 +1,21 @@
+{
+  "source": "Indian Express",
+  "url": "https://indianexpress.com/article/technology/tech-news-technology/iran-and-china-create-first-of-their-kind-autonomous-ai-influence-campaigns-10886860/",
+  "heading": "Iran and China create first-of-their-kind autonomous AI influence campaigns",
+  "category": "Technology",
+  "photo": "https://images.indianexpress.com/2026/06/Hacker.jpg",
+  "author": "",
+  "date": "2026-09-21T09:22:20+05:30",
+  "totalParagraphs": 9,
+  "paragraphs": [
+    "Iran, China and groups in Israel used artificial intelligence in novel ways in recent months to create first-of-their-kind influence campaigns on social media, ratcheting up concerns among U.S. officials and security researchers about the fast-evolving technology.",
+    "The countries and groups combined AI tactics to ramp up the speed and scale of online campaigns beyond what people could easily achieve and with minimal human interaction, U.S. officials and security researchers with knowledge of the efforts said.",
+    "First, the countries and groups turned to Chinese “open-source” AI models, which are increasingly powerful systems that are freely available to download and modify. Then they used those AI models to create “agents,” which are bots that can operate software and complete tasks on their own.",
+    "Once hundreds of those AI agents were let loose, they autonomously opened networks of fake accounts on platforms such as Instagram, Facebook, X and TikTok, the officials and security researchers said. The agents then rapidly seeded the fake accounts with false posts about politics and current events to sway opinions and inflame issues.",
+    "In most of the cases, the safeguards that would normally stop an AI model from creating a fake account or manipulating discussions online were turned off by those operating the systems, said the U.S. officials, who were not authorized to speak publicly on sensitive issues.",
+    "The campaigns caught the attention of U.S. intelligence, major tech companies and security experts, the people with knowledge of the campaigns said. These groups found that the Chinese and the Iranian campaigns were state-backed, while two Israeli campaigns were traced to private companies.",
+    "The state-backed Iranian campaign was especially concerning, the officials and security researchers said. Iran targeted U.S. audiences, with the agent-generated fake accounts posing as everyday Americans who lived in major cities. The accounts tagged journalists and politicians in comments that spread popular memes and anti-Republican Party views, the people said. Nearly 80,000 people followed the AI-created accounts, which were active in the first half of the year.",
+    "Of the two agentic campaigns that were traced back to companies in Israel, one was generated over the summer by IntelEye, a Tel Aviv-based firm, according to the two people with knowledge of the campaign.",
+    "Maor Sellek, an IntelEye co-founder, said it was an experiment to test the safety of AI models. “IntelEye does not operate influence campaigns,” Sellek said."
+  ]
+}

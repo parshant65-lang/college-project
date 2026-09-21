@@ -1,0 +1,29 @@
+{
+  "source": "Hindustan Times",
+  "url": "https://www.hindustantimes.com/world-news/notorious-cyber-crime-group-claims-hijack-of-key-rivals-site-on-dark-web-101789969181999.html",
+  "heading": "Notorious cyber crime group claims hijack of key rival's site on dark web",
+  "category": "World news",
+  "photo": "https://www.hindustantimes.com/ht-img/img/2026/09/21/1600x900/logo/pexels-photo-5380665_1789969389884_YAZO_1789969402827_Y49I_db135ed5-90d1-4408-a6f6-3ed5486cf7af_NF0v.jpeg",
+  "author": "",
+  "date": "2026-09-21T11:14:39+05:30",
+  "totalParagraphs": 17,
+  "paragraphs": [
+    "One of the world's best-known cyber crime groups said on Sunday it had hijacked one of its chief rivals' dark web site, bringing what it said was a long-simmering feud out into the open.",
+    "ShinyHunters, a digital extortion group known for aggressive data theft campaigns, said it broke into the dark web site of cybercrime gang cl0p on Friday after discovering a vulnerability in cl0p's software and using it to establish wide-ranging control over the group's infrastructure.",
+    "\"We basically own them now,\" ShinyHunters said in an online chat with Reuters.",
+    "Cl0p did not respond to repeated messages seeking comment. The group's dark web site was unreachable when Reuters tried to visit it on Sunday, but on Saturday it displayed the words, \"Domain Seized By ShinyHunters,\" according to a screenshot preserved by cybercrime research platform eCrime.ch.",
+    "Two cybersecurity experts told Reuters the clash appeared to be genuine.",
+    "\"Street beefs on the dark web are a real thing,\" said Brandon Parsons, a threat intelligence manager with Minnesota-based Ascent Solutions.",
+    "Joe Roosen, the senior director of security research at Texas-based SpyCloud, said that he had never seen one cybercrime group take another head-on quite so openly. \"This was a twist for sure,\" he said. \"It is rare I get to see these criminals fight each other.\"",
+    "ShinyHunters said it had been at loggerheads with cl0p over the alleged theft last year of a software exploit taking advantage of what was a then-unknown flaw in the E-Business Suite (EBS) made by Oracle.",
+    "Such \"zero days\" — so-called because cybersecurity teams have had zero days to fix them — are particularly treasured by hackers because they can be used to gain sweeping access to vulnerable networks.",
+    "Cl0p, a Russian-speaking cybercrime gang, used the EBS vulnerability to steal data from what a Google analyst estimated was more than 100 companies, but ShinyHunters told Reuters it had discovered the zero day first.",
+    "As the dispute festered, cl0p threatened to reveal the identities of several of its rival's members, according to ShinyHunters.",
+    "ShinyHunters in turn threatened to reveal the details of cl0p's internal workings.",
+    "Reuters could not immediately establish the veracity of ShinyHunters' account of the feud.",
+    "Cl0p is counted as one of the most prolific and innovative cybercrime groups, largely because of its skill in finding and exploiting vulnerabilities in enterprise software.",
+    "In 2023, cl0p leveraged a bug in MOVEit file management software to steal data on tens of millions of people from more than 600 companies. Just last month it claimed to have stolen large volumes of data ​from nearly 50 companies worldwide, including Philips, Shell, Fiserv and GE.",
+    "ShinyHunters is similarly prolific. It drew media attention in April for its claim to have stolen millions of business records from video game developer Rockstar Games, the ‌maker of \"Grand Theft Auto\", and for a hack in May centered on education tool Canvas that caused widespread disruption across U.S. schools.",
+    "This month, AI company Anthropic said it had caught ShinyHunters-linked hackers trying to use its tools."
+  ]
+}

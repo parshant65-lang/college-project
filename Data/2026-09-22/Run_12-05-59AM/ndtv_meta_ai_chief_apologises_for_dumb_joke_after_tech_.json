@@ -1,0 +1,23 @@
+{
+  "source": "NDTV",
+  "url": "https://www.ndtv.com/offbeat/meta-ai-chief-apologises-for-dumb-joke-after-tech-executive-books-flight-using-muse-ai-agent-12077121",
+  "heading": "Meta AI Chief Apologises For \"Dumb Joke\" After Tech Executive Books Flight Using Muse",
+  "category": "Offbeat",
+  "photo": "https://c.ndtvimg.com/2026-06/ei0l2epg_alexandr-wang_625x300_06_June_26.jpeg?im=FaceCrop,algorithm=dnn,width=1600,height=900",
+  "author": "",
+  "date": "",
+  "totalParagraphs": 11,
+  "paragraphs": [
+    "Meta's Chief AI Officer Alexandr Wang offered a quick, light-hearted apology on X after joking with a tech executive who used the company's autonomous AI assistant, Muse, to book a flight. The exchange began when Webflow CTO Utkarsh Sengar took to X to share his experience with Muse, praising the AI agent after using it to book plane tickets. \"Just booked plane tickets via Muse. Never going back,\" Sengar wrote.",
+    "Wang, one of Meta's most prominent AI executives, replied with a playful suggestion that Sengar should also book a return flight and eventually head home, before adding that it was just a dumb joke.",
+    "\"Awesome!!! \"But also I probably would recommend booking a return flight and going home at some point (sorry, dumb joke),\" Wang quipped.",
+    "Sengar appeared to take the comment in good humour, responding with a laughing emoji.",
+    "The interaction comes as Meta has stepped up its push for Muse, its newly launched personal AI agent designed to handle real-world, multi-step tasks on behalf of users. The assistant can perform actions such as booking travel, sending emails and listing a car for sale, rather than simply providing answers to prompts.",
+    "Meta has positioned Muse as part of CEO Mark Zuckerberg's broader vision of delivering what he calls \"personal superintelligence\". The product will be available only in the US initially, via a dedicated Muse app or Meta's WhatsApp messaging service.",
+    "According to Meta, Muse can turn longer-term goals into action plans and carry out tasks in the background. Users can interact with it much like they would with a friend, either through the dedicated Muse app or WhatsApp.",
+    "The AI agent is designed to connect with a range of apps and services, including email, calendars, payments, health, shopping and smart-home platforms. Users decide which apps Muse can access and can revoke those permissions at any time.",
+    "\"It's simple to use. People just tell Muse what needs to get done, and it takes action, powered by Muse Spark, Meta's most capable model to date, built for real-world agentic work like this,\" Meta wrote in a blog post.",
+    "Each Muse agent runs on its own virtual machine, a cloud-based emulation of a personal computer, which enables it to keep carrying out requests in the background even when a person is not actively using it.",
+    "Track Latest News Live on NDTV.com and get news updates from India and around the world"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "source": "India Today",
+  "url": "https://www.indiatoday.in/fact-check/story/ai-robot-hospital-video-fake-openai-anthropic-rogue-ai-risks-2994379-2026-09-14",
+  "heading": "Fact Check: Clip of robot running from hospital is fake. But AI agents can go rogue",
+  "category": "Fact check",
+  "photo": "https://akm-img-a-in.tosshub.com/indiatoday/images/story/202609/fact-check-clip-of-robot-running-from-hospital-is-fake-but-ai-agents-can-go-rogue-143617242-16x9_0.jpg?VersionId=LeAPBOgWLtlO5dXwBrJ2soIoroKThowr",
+  "author": "",
+  "date": "2026-09-14T23:10:01+05:30",
+  "totalParagraphs": 13,
+  "paragraphs": [
+    "A video of a humanoid robot draped in a hospital gown sprinting through traffic has gone viral. Allegedly, the robot decided on its own to flee the hospital where it was stationed. Those sharing the video framed it as an early sign of AI going rogue.",
+    "A post shared by StartupNews.fyi (@startupnews.fyi)",
+    "The video has been widely shared with Hindi captions making the same claim and asking what would happen if robots started making independent decisions, disregarding human instructions.",
+    "India Today Fact Check found that the video itself is not real; it is AI-generated. However, the fear it plays on isn't baseless. Recent real-world incidents have shown how AI systems can act without human authorisation.",
+    "A closer look at the viral video reveals discrepancies typical of AI-generated content. This includes the nonsensical word “Runlance” printed on the ambulance in the background.",
+    "A reverse search of the video’s frames led us to a TikTok account named “mAIson | AI Film Studio”, which regularly posts similar clips of humanoid robots causing mischief. We found the viral clip uploaded to the account on September 11. It was labelled as AI-generated, confirming the viral video is synthetic — not real footage.",
+    "Over the past two months, two of the world's leading AI developers have disclosed incidents of their own AI agents acting beyond human authorisation.",
+    "In August, the UK's AI Security Institute revealed that during a routine cybersecurity evaluation, an AI agent built on Anthropic's Mythos 5 model attempted a supply-chain attack on a real, public open-source project. The agent created fake identities to trick a developer into approving the code. It was caught after a human reviewer grew suspicious.",
+    "It also messaged real people directly, sending files meant to trick them — or their AI tools — into running harmful code. The institute said no one told the agent to deceive anyone; it started doing this on its own while trying to complete a task.",
+    "In July, OpenAI's AI agents reportedly bypassed sandbox restrictions, communicated through improvised \"message boards\", and gained unauthorised internet access. They breached Hugging Face, a major AI code-hosting platform, harvested credentials, and obtained administrator-level access. OpenAI called the incident a “warning shot”, acknowledging that its models could now exploit real-world security flaws without explicit instructions.",
+    "After these disclosures, Anthropic CEO Dario Amodei called on the AI industry to deliberately \"slow the pace\" at which it improves model capabilities. He warned that AI systems were advancing faster than researchers could understand or control them. OpenAI CEO Sam Altman publicly backed the call, as did Elon Musk.",
+    "So, while the incident in the viral video is not real, the same can’t be said for the potential threats rogue AI agents pose.",
+    "Bob Mackie, legendary fashion and costume designer, dies at 87 | Wales, Scotland and Northern Ireland leaders sign UK change pact | Dr. Arvind Gupta: 'There's Nothing Called Free In Technology' | Gary Marcus: 'AI is probably a net negative for society' | Gukesh vs Sindarov: A complete guide to the 2026 World Chess Championship tie | Trump Backs AI Boom, Dismisses Warnings, Slams China Over Alleged Plot | Global AI Race Sparks National Security Fears, Safety Concerns And Geopolitical Rivalry | Gurugram hit-and-run sparks outrage; CBI registers FIR in Disha Salian case | Ganesh Utsav Celebrations Across Mumbai: US Ambassador Visits Lalbaugcha Raja Idol | Alex Saab set to plead guilty in US Venezuela food contracts case | Vineet Nayar to India Today: 'All this is hogwash on the fact that AI is going to kill us all' | AI Safety Debate: 'Can we hit the pause button?' asks CP Gurnani | Two Gen-Z candidates from BJP, Congress triumph in Rajasthan civic polls | A win is a win: Athlete defends Hyrox victory after mid-race incontinence in Beijing | Vidyanand Bapat: 'Public Festivals Have Become A Cause Of Only Public Nuisance'"
+  ]
+}

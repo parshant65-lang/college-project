@@ -1,0 +1,28 @@
+{
+  "source": "Indian Express",
+  "url": "https://indianexpress.com/article/technology/artificial-intelligence/meet-jev-new-ai-model-from-chatgpt-inventor-10887591/",
+  "heading": "Meet Jev, the new AI model built to make decisions instead of generating text",
+  "category": "Technology",
+  "photo": "https://images.indianexpress.com/2026/09/Tech-featured-image-1-1.jpg",
+  "author": "",
+  "date": "2026-09-21T16:50:52+05:30",
+  "totalParagraphs": 16,
+  "paragraphs": [
+    "A new AI model called ‘Jev’ developed by TypeSafe AI is making waves among developers. The model is drawing attention for what it is capable of, as much as for who helped build it: Diogo Almeida, a researcher whose work enabled the instruction-following feature underpinning OpenAI’s ChatGPT.",
+    "But Jev is not another AI chatbot or large language model (LLM) designed to output text. Instead, the transformer-based model produces probabilities or ‘calibrated decisions’, according to the AI startup. Launched on September 15, Jev is said to be incredibly cheap and fast. It can help AI agents decide which tool to call next and whether to retry the task, by answering those questions in under half a second for $0.042 per million input tokens. Output is free.",
+    "A few days since its launch, Jev has already been added by popular model gateway platforms such as Vercel, Cloudflare, LangChain, and Langfuse to their stacks. TypeSafe AI on Monday, September 21, further announced that Jev is now available to everyone, without a waitlist, with access starting at $5 in credits, equivalent to roughly 120 million tokens.",
+    "With Jev, the bet is that such AI models could serve as the foundation for developers to build products at scale. Agent vendors are likely to be the target customers, as companies running multiple agents relying on costly language-model calls could replace it with a model that offers free output, potentially lowering the cost of running each agent and improving their margins. It helps position Jev at the decision-making layer underneath a growing ecosystem of AI agents.",
+    "“We think that there’s just going to be smart software all over the place in a way that’s emergent and distributed … much more like the early internet than you know like the mega apps that people are trying to build right now,” Almeida was quoted as saying by TechCrunch.",
+    "Almedia not only helped build ChatGPT but also invented reinforcement learning from human feedback (RLHF), a post-training technique that drove the rapid advancement and scaling of LLMs. “The problem is we are optimising for human language. We have been super good at human language for four years, but it’s not useful for automation because computers speak a different language,” he said.",
+    "After exiting OpenAI nearly two years ago, Almedia returned to tackle the RL problem head-on by launching a startup called TypeSafe AI, along with co-founders Erik Gafni and Sashsa Sheng.",
+    "The startup’s first model, Jev, has been named after William Stanley Jevons, a famous economist who came up with the eponymous paradox stating that cheaper coal will lead to more coal consumption. Jevon’s Paradox has often been cited by tech industry leaders such as Microsoft CEO Satya Nadella, who expect intelligence to follow the same curve.",
+    "Jev has been trained exclusively on synthetically generated data using a method that TypeSafe AI refers to as Reinforcement Learning for Calibrated Decisions. The startup has kept the finer details of Jev’s model architecture under wraps, though some observers speculate that it has been built on top of an open-weight LLM.",
+    "The company claimed that Jev is a first-of-its-kind ‘System One’ model that is focused on intuition rather than reasoning. The model is said to be incapable of hallucinating because users give it context and define the outputs in advance. Instead of text, Jev returns a structured answer for the user’s code, along with probabilities that show how uncertain the answer is. Every question in a request is evaluated in parallel, and one answer does not influence the other.",
+    "TypeSafe has said it will be building more versions of the model in new modalities.",
+    "Early signs suggest that Jev is gaining traction among developers, with the surging demand last week causing TypeSafe to lose the ability to serve users from its API for a short period of time.",
+    "The most common use case for Jev appears to be software automation, where developers are using the model as a cheaper and faster way to incorporate AI into their workflows.",
+    "For instance, one software engineer replaced OpenAI’s GPT-5.6 Luna with Jev to run a classifier to review commands for safety. The end results were five to 18 times quicker with greater accuracy. In comparing Jev with Google’s Gemini models on tasks such as classifying business emails, another developer found that while Gemini was slightly more accurate than Jev, the latter was about 10 to 20 times cheaper.",
+    "The confidence scores accompanying Jev’s answers have also reportedly been a big draw for developers.",
+    "Almeida has said that Jev can also be used as a monitoring tool to keep a check on misalignment among AI agents, as it is capable of tracking LLM agent traces and preventing jailbreaks. Model routing, which involves real-time sorting of queries or workloads, could be another potential use case of Jev given its low cost and speed."
+  ]
+}
