@@ -109,8 +109,8 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
       }
     } catch (e) {}
 
-    // Check if we hit a bot-block / paywall (common on Bloomberg) or fetch failed
-    const isBlocked = !html || html.includes('please click the box below') || html.includes('robot') || html.length < 500;
+    // Check if we hit a genuine bot-block or empty HTML (e.g. Bloomberg 403 / captcha)
+    const isBlocked = !html || html.length < 500 || html.includes('please click the box below') || html.includes('captcha-delivery');
 
     if (!isBlocked) {
       // Normal HTML extraction
@@ -135,45 +135,46 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
       date = $('meta[property="article:published_time"]').attr('content') || 
              $('time').first().text().trim() || '';
 
-      // Universal Body Paragraph Selectors across all sites
-      const bodySelectors = [
-        '.articlebodycontent',
-        '#pcl-full-content',
-        '.story-details',
-        '.story__content',
-        '#ins_storybody',
-        '.detail',
-        '.storyDetails',
-        '.story__description',
-        '.it-story-body',
-        '[itemprop="articleBody"]',
-        'main article',
-        'article'
-      ];
-
-      let bodyContainer = null;
-      for (const sel of bodySelectors) {
-        const el = $(sel);
-        if (el.length > 0 && el.find('p').length > 0) {
-          bodyContainer = el;
-          break;
-        }
-      }
-
-      const targetElements = bodyContainer ? bodyContainer.find('p') : $('p');
-
-      targetElements.each((_, el) => {
+      // 1. Primary: Extract all genuine story <p> tags across the page
+      $('p').each((_, el) => {
         const text = $(el).text().replace(/\s+/g, ' ').trim();
         const lower = text.toLowerCase();
         const shouldIgnore = ignorePhrases.some(phrase => lower.includes(phrase));
 
-        if (text.length > 50 && !shouldIgnore) {
+        if (text.length > 45 && !shouldIgnore) {
           paragraphs.push(text);
         }
       });
+
+      // 2. Secondary: If <p> tags gave very few paras (common on Times of India / custom CMS), check JSON-LD
+      if (paragraphs.length < 2) {
+        $('script[type="application/ld+json"]').each((_, el) => {
+          if (paragraphs.length >= 2) return;
+          try {
+            const data = JSON.parse($(el).text());
+            const items = Array.isArray(data) ? data : [data];
+            for (const it of items) {
+              if (it.articleBody && typeof it.articleBody === 'string') {
+                const split = it.articleBody.split(/\n+|\.\s+(?=[A-Z])/).map(s => s.trim()).filter(s => s.length > 45);
+                if (split.length > paragraphs.length) paragraphs = split;
+              }
+            }
+          } catch(e) {}
+        });
+
+        // 3. Check custom story containers (like TOI div._s30J, div.ihgno)
+        if (paragraphs.length < 2) {
+          const customDiv = $('div._s30J, div.ihgno, div.article_content, div.story-text');
+          if (customDiv.length > 0) {
+            const text = customDiv.text().replace(/\s+/g, ' ').trim();
+            const split = text.split(/\.\s+(?=[A-Z])/).map(s => s.trim() + '.').filter(s => s.length > 45 && !s.toLowerCase().includes('download the'));
+            if (split.length > paragraphs.length) paragraphs = split;
+          }
+        }
+      }
     }
 
-    // Fallback: If blocked (e.g. Bloomberg bot protection), recover from RSS metadata cache!
+    // Fallback: If blocked (e.g. Bloomberg 403 paywall) or no paras found, recover from RSS metadata cache!
     if (paragraphs.length === 0 && rssMetadataCache.has(articleUrl)) {
       const cached = rssMetadataCache.get(articleUrl);
       heading = cached.title || heading;
