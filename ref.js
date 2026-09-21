@@ -65,13 +65,18 @@ async function scrapeSingleArticle(articleUrl) {
       .replace(/^_+|_+$/g, '')
       .slice(0, 60);
 
-    if (!safeFilename) safeFilename = `article_${Date.now()}`;
+    // Determine Date Subfolder (e.g. Data/2026-09-21/)
+    const today = new Date().toISOString().split('T')[0];
+    const dateDir = path.join(dataDir, today);
+    if (!fs.existsSync(dateDir)) {
+      fs.mkdirSync(dateDir, { recursive: true });
+    }
 
-    const txtFilePath = path.join(dataDir, `${safeFilename}.txt`);
-    const jsonFilePath = path.join(dataDir, `${safeFilename}.json`);
+    const txtFilePath = path.join(dateDir, `${safeFilename}.txt`);
+    const jsonFilePath = path.join(dateDir, `${safeFilename}.json`);
 
     // If already downloaded previously, skip quickly!
-    if (fs.existsSync(txtFilePath)) {
+    if (fs.existsSync(txtFilePath) || fs.existsSync(path.join(dataDir, `${safeFilename}.txt`))) {
       return { status: 'skipped', heading, filename: safeFilename };
     }
 
@@ -116,7 +121,7 @@ async function scrapeSingleArticle(articleUrl) {
     readableText += paragraphs.join('\n\n');
     readableText += `\n\n==========================================================\n`;
 
-    // Save files
+    // Save files inside date-wise folder
     fs.writeFileSync(txtFilePath, readableText);
     fs.writeFileSync(jsonFilePath, JSON.stringify({
       url: articleUrl,
@@ -128,10 +133,10 @@ async function scrapeSingleArticle(articleUrl) {
       paragraphs
     }, null, 2));
 
-    // Update latest.txt
+    // Update latest.txt in main Data folder
     fs.writeFileSync(path.join(dataDir, 'latest.txt'), readableText);
 
-    return { status: 'saved', heading, photo, paragraphsCount: paragraphs.length, filename: safeFilename };
+    return { status: 'saved', heading, photo, paragraphsCount: paragraphs.length, filename: `${today}/${safeFilename}` };
   } catch (err) {
     return null;
   }
