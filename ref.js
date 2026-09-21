@@ -56,7 +56,7 @@ const ignorePhrases = [
 /**
  * 1. Scrapes a single article & saves it to Data folder
  */
-async function scrapeSingleArticle(articleUrl) {
+async function scrapeSingleArticle(articleUrl, targetFolder = null) {
   try {
     // 0. Instant History Check: Skip immediately if already in master history registry
     if (scrapedHistory.has(articleUrl)) {
@@ -90,17 +90,26 @@ async function scrapeSingleArticle(articleUrl) {
       .replace(/^_+|_+$/g, '')
       .slice(0, 60);
 
-    // Determine Date Subfolder (e.g. Data/2026-09-21/)
-    const today = new Date().toISOString().split('T')[0];
-    const dateDir = path.join(dataDir, today);
-    if (!fs.existsSync(dateDir)) {
-      fs.mkdirSync(dateDir, { recursive: true });
+    // Determine target save directory with Date & Time (e.g. Data/2026-09-21/Run_11-59-19PM/)
+    let saveDir = targetFolder;
+    if (!saveDir) {
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const hours = now.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = String(hours % 12 || 12).padStart(2, '0');
+      const timeStr = `Run_${displayHours}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}${ampm}`;
+      saveDir = path.join(dataDir, dateStr, timeStr);
     }
 
-    const jsonFilePath = path.join(dateDir, `${safeFilename}.json`);
+    if (!fs.existsSync(saveDir)) {
+      fs.mkdirSync(saveDir, { recursive: true });
+    }
+
+    const jsonFilePath = path.join(saveDir, `${safeFilename}.json`);
 
     // If already downloaded previously, skip quickly!
-    if (fs.existsSync(jsonFilePath) || fs.existsSync(path.join(dataDir, `${safeFilename}.json`))) {
+    if (fs.existsSync(jsonFilePath)) {
       recordInHistory(articleUrl);
       return { status: 'skipped', heading, filename: safeFilename };
     }
@@ -311,10 +320,27 @@ async function crawlAllArticles(baseUrl, concurrency = 5) {
   const articleLinks = await discoverAllWebsiteArticles(baseUrl);
   const total = articleLinks.length;
 
+  // Session run folder with Date and Time: e.g. Data/2026-09-21/Run_11-59-19PM/
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const dateFolder = `${year}-${month}-${day}`;
+
+  const hours = now.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = String(hours % 12 || 12).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const timeFolder = `Run_${displayHours}-${minutes}-${seconds}${ampm}`;
+
+  const sessionDir = path.join(dataDir, dateFolder, timeFolder);
+
   console.log(`\n==========================================================`);
   console.log(`🎯 TOTAL UNIQUE ARTICLES DISCOVERED: ${total}`);
+  console.log(`⏰ Run Session Folder: Data/${dateFolder}/${timeFolder}/`);
   console.log(`⚡ Concurrency: ${concurrency} parallel workers`);
-  console.log(`🚀 Starting processing of ALL ${total} articles into "Data/" folder...`);
+  console.log(`🚀 Starting processing of ALL ${total} articles...`);
   console.log(`==========================================================\n`);
 
   let savedCount = 0;
@@ -335,7 +361,7 @@ async function crawlAllArticles(baseUrl, concurrency = 5) {
         continue;
       }
 
-      const result = await scrapeSingleArticle(url);
+      const result = await scrapeSingleArticle(url, sessionDir);
       if (result) {
         if (result.status === 'skipped') {
           console.log(`${progress} ⏩ Skipped (already exists): "${result.heading.slice(0, 48)}..."`);
@@ -361,7 +387,11 @@ async function crawlAllArticles(baseUrl, concurrency = 5) {
   console.log(`🎉 COMPLETE! ALL SITEMAP & WEBSITE ARTICLES PROCESSED!`);
   console.log(`   ✅ Newly Downloaded & Saved : ${savedCount}`);
   console.log(`   ⏩ Already Downloaded       : ${skippedCount}`);
-  console.log(`   📁 Total Files in Data/     : ${fs.readdirSync(dataDir).length}`);
+  if (savedCount > 0) {
+    console.log(`   📂 Saved In This Run Folder : Data/${dateFolder}/${timeFolder}/`);
+  } else {
+    console.log(`   ℹ️ No new articles were published since the last run.`);
+  }
   console.log(`==========================================================\n`);
 }
 
