@@ -97,11 +97,10 @@ async function scrapeSingleArticle(articleUrl) {
       fs.mkdirSync(dateDir, { recursive: true });
     }
 
-    const txtFilePath = path.join(dateDir, `${safeFilename}.txt`);
     const jsonFilePath = path.join(dateDir, `${safeFilename}.json`);
 
     // If already downloaded previously, skip quickly!
-    if (fs.existsSync(txtFilePath) || fs.existsSync(path.join(dataDir, `${safeFilename}.txt`))) {
+    if (fs.existsSync(jsonFilePath) || fs.existsSync(path.join(dataDir, `${safeFilename}.json`))) {
       recordInHistory(articleUrl);
       return { status: 'skipped', heading, filename: safeFilename };
     }
@@ -153,22 +152,8 @@ async function scrapeSingleArticle(articleUrl) {
 
     if (paragraphs.length === 0) return null;
 
-    // Readable text content
-    let readableText = `==========================================================\n`;
-    readableText += `📰 HEADING:\n${heading}\n\n`;
-    readableText += `🏷️ CATEGORY: ${category}\n`;
-    readableText += `📸 PHOTO URL:\n${photo}\n\n`;
-    if (author) readableText += `✍️ AUTHOR: ${author}\n`;
-    if (date) readableText += `📅 DATE: ${date}\n`;
-    readableText += `🔗 URL: ${articleUrl}\n`;
-    readableText += `==========================================================\n\n`;
-    readableText += `📝 CLEAN ARTICLE BODY:\n\n`;
-    readableText += paragraphs.join('\n\n');
-    readableText += `\n\n==========================================================\n`;
-
-    // Save files inside date-wise folder
-    fs.writeFileSync(txtFilePath, readableText);
-    fs.writeFileSync(jsonFilePath, JSON.stringify({
+    // Save clean JSON file inside date-wise folder
+    const articleData = {
       url: articleUrl,
       heading,
       category,
@@ -177,10 +162,12 @@ async function scrapeSingleArticle(articleUrl) {
       date,
       totalParagraphs: paragraphs.length,
       paragraphs
-    }, null, 2));
+    };
 
-    // Update latest.txt in main Data folder
-    fs.writeFileSync(path.join(dataDir, 'latest.txt'), readableText);
+    fs.writeFileSync(jsonFilePath, JSON.stringify(articleData, null, 2));
+
+    // Update latest.json in main Data folder for quick inspection
+    fs.writeFileSync(path.join(dataDir, 'latest.json'), JSON.stringify(articleData, null, 2));
 
     // Record URL in master history registry
     recordInHistory(articleUrl);
