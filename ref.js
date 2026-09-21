@@ -189,6 +189,50 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
       }
     }
 
+    // In-page Related News & Suggestion Link Discovery (Web Spidering)
+    const discoveredLinks = [];
+    if (!isBlocked) {
+      $('a[href]').each((_, el) => {
+        try {
+          const rawHref = $(el).attr('href');
+          if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('javascript:')) return;
+
+          const absUrl = new URL(rawHref, articleUrl).href.split('?')[0].split('#')[0];
+          const host = new URL(absUrl).hostname.toLowerCase();
+          const baseHost = new URL(articleUrl).hostname.toLowerCase();
+
+          // Keep within the same news organization domain
+          if (host.includes(baseHost.replace('www.', '')) || baseHost.includes(host.replace('www.', ''))) {
+            const pathName = new URL(absUrl).pathname.toLowerCase();
+            const isArticle = (
+              pathName.endsWith('.html') ||
+              pathName.endsWith('.ece') ||
+              pathName.endsWith('.cms') ||
+              pathName.includes('/story/') ||
+              pathName.includes('/article/') ||
+              pathName.includes('/news/') ||
+              /\/\d{5,}/.test(pathName)
+            );
+            const isNotNoise = (
+              !pathName.includes('/tag/') &&
+              !pathName.includes('/category/') &&
+              !pathName.includes('/topic/') &&
+              !pathName.includes('/author/') &&
+              !pathName.includes('/about-us') &&
+              !pathName.includes('/privacy') &&
+              !pathName.includes('/terms') &&
+              !pathName.includes('/video') &&
+              !pathName.includes('/photos')
+            );
+
+            if (isArticle && isNotNoise && !scrapedHistory.has(absUrl)) {
+              discoveredLinks.push(absUrl);
+            }
+          }
+        } catch (e) {}
+      });
+    }
+
     // Clean up heading
     heading = heading.replace(/\s+/g, ' ')
       .replace(/\|\s*(Bloomberg|The Hindu|Indian Express|Hindustan Times|NDTV|India Today|BBC|Aaj Tak|LiveMint|Times of India).*$/i, '')
@@ -243,7 +287,7 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
     // If already downloaded previously, skip quickly!
     if (fs.existsSync(jsonFilePath)) {
       recordInHistory(articleUrl);
-      return { status: 'skipped', heading, filename: safeFilename };
+      return { status: 'skipped', heading, filename: safeFilename, discoveredLinks };
     }
 
     // Clean JSON Object
@@ -267,7 +311,7 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
     // Record URL in master history registry
     recordInHistory(articleUrl);
 
-    return { status: 'saved', source, heading, category, photo, paragraphsCount: paragraphs.length, filename: safeFilename };
+    return { status: 'saved', source, heading, category, photo, paragraphsCount: paragraphs.length, filename: safeFilename, discoveredLinks };
   } catch (err) {
     return null;
   }
@@ -511,9 +555,10 @@ async function crawlAllArticles(concurrency = 8) {
   const sessionDir = path.join(dataDir, dateFolder, timeFolder);
 
   console.log(`\n==========================================================`);
-  console.log(`🎯 TOTAL ARTICLES DISCOVERED ACROSS ALL SOURCES: ${total}`);
+  console.log(`🎯 TOTAL SEED ARTICLES DISCOVERED: ${total}`);
   console.log(`⏰ Run Session Folder: Data/${dateFolder}/${timeFolder}/`);
   console.log(`⚡ Concurrency: ${concurrency} parallel multi-source workers`);
+  console.log(`🕸️  In-Page Deep Spider: ACTIVE (Auto-crawling suggested & related stories)`);
   console.log(`🚀 All news websites are now working TOGETHER simultaneously!`);
   console.log(`==========================================================\n`);
 
@@ -521,13 +566,16 @@ async function crawlAllArticles(concurrency = 8) {
   let skippedCount = 0;
   let currentIndex = 0;
   const savedBySource = {};
+  const seenInRun = new Set(articleLinks);
+  const MAX_SPIDER_DISCOVERIES = 600; // Cap to keep runs balanced and high quality
+  let spiderDiscoveredCount = 0;
 
   // Parallel Worker pool
   async function worker(workerId) {
     while (currentIndex < articleLinks.length) {
       const index = currentIndex++;
       const url = articleLinks[index];
-      const progress = `[${index + 1}/${total}] (${Math.round(((index + 1) / total) * 100)}%)`;
+      const progress = `[${index + 1}/${articleLinks.length}] (${Math.round(((index + 1) / articleLinks.length) * 100)}%)`;
 
       // Instant history check: skip without sending HTTP request!
       if (scrapedHistory.has(url)) {
@@ -541,7 +589,23 @@ async function crawlAllArticles(concurrency = 8) {
           skippedCount++;
         } else {
           savedBySource[result.source] = (savedBySource[result.source] || 0) + 1;
-          console.log(`${progress} ✅ [SAVED] [${result.source}] [${result.category}]: "${result.heading.slice(0, 38)}..." (${result.paragraphsCount} paras)`);
+
+          // Recursive Spidering: Enqueue newly discovered suggested links from the page
+          let spiderAdded = 0;
+          if (result.discoveredLinks && result.discoveredLinks.length > 0 && spiderDiscoveredCount < MAX_SPIDER_DISCOVERIES) {
+            for (const sugUrl of result.discoveredLinks) {
+              if (!scrapedHistory.has(sugUrl) && !seenInRun.has(sugUrl)) {
+                seenInRun.add(sugUrl);
+                articleLinks.push(sugUrl);
+                spiderDiscoveredCount++;
+                spiderAdded++;
+                if (spiderDiscoveredCount >= MAX_SPIDER_DISCOVERIES) break;
+              }
+            }
+          }
+
+          const spiderBadge = spiderAdded > 0 ? ` 🕸️ (+${spiderAdded} related)` : '';
+          console.log(`${progress} ✅ [SAVED] [${result.source}] [${result.category}]: "${result.heading.slice(0, 36)}..." (${result.paragraphsCount} paras)${spiderBadge}`);
           savedCount++;
         }
       }
@@ -557,6 +621,7 @@ async function crawlAllArticles(concurrency = 8) {
   console.log(`🎉 MULTI-SOURCE CRAWL COMPLETE!`);
   console.log(`   ✅ Newly Downloaded & Saved : ${savedCount}`);
   console.log(`   ⏩ Already Downloaded       : ${skippedCount}`);
+  console.log(`   🕸️  Spider Deep Discoveries : ${spiderDiscoveredCount} related articles`);
   if (savedCount > 0) {
     console.log(`   📂 Saved In This Run Folder : Data/${dateFolder}/${timeFolder}/`);
     console.log(`\n📊 Breakdown of Newly Saved Articles by Website:`);

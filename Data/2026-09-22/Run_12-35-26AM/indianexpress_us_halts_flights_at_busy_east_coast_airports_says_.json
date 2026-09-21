@@ -1,0 +1,27 @@
+{
+  "source": "Indian Express",
+  "url": "https://indianexpress.com/article/world/uss-faa-fiber-line-cut-outage-us-east-coast-airports-flight-delays-10888207/",
+  "heading": "US halts flights at busy East Coast airports, says fiber line cut at construction site",
+  "category": "World",
+  "photo": "https://images.indianexpress.com/2026/09/airport_20260921185859.jpg",
+  "author": "",
+  "date": "2026-09-22T00:33:13+05:30",
+  "totalParagraphs": 15,
+  "paragraphs": [
+    "The Federal Aviation Administration halted traffic on Monday at busy US East Coast airports, snarling more than 1,000 flights after a telecom circuit failed and a backup fiber cable was accidentally cut.",
+    "The issue at one point forced a halt to incoming flights at all three major New York-area airports as well ⁠as ​Philadelphia and Boston and two smaller airports in the New York area.",
+    "The flights were halted on the day that 130 world leaders and dozens of ministers were arriving in New York for the annual high-level meeting of the United Nations General Assembly.",
+    "The incident demonstrated the fragility of the aging US air traffic control ​system, ​which Congress awarded $12.5 billion for upgrades last year.",
+    "FAA Administrator Bryan Bedford ⁠said a replacement circuit had also failed but said they were resuming traffic to John F. Kennedy Airport and LaGuardia Airport. He said it was not ‌clear when flights might resume at airports in Philadelphia and Newark.",
+    "A ground stop at Boston, which stopped accepting flights because of spillover volume, was also lifted.",
+    "The FAA will not restart the system for incoming flights at the affected airports “until we make sure the airspace is safe,” Bedford said.",
+    "The loss of communications was tied to some frequencies at a Philadelphia air traffic control facility that handles air traffic for the airports, Bedford said. Then authorities discovered that a backup fiber line was ⁠accidentally cut by a construction crew ⁠in New Jersey.",
+    "At Newark alone, more than 1,000 flights had been delayed or canceled. Throughout the US there were nearly 4,000 delayed flights ⁠and 500 canceled.",
+    "“When it ‌went to flip into the backup, we discovered that the backup fiber had ​a break, and that fiber break is probably 13 hours to ‌repair. It’s massive, I’m told. Meanwhile, we’ve got the new circuit ready to install now,” Bedford said.",
+    "FlightAware, a flight-tracking site, said more than 600 flights at Newark and Philadelphia, ‌or more than 20%, ​had been delayed at ​Philadelphia Terminal ​Radar Approach Control. Newark is a major United Airlines hub, while Philadelphia is an American Airlines hub.",
+    "The issue has also forced the diversion of a number ​of flights to other airports. Flightradar24, a flight-tracking site, said flights were ⁠being delayed by an average of 112 minutes at Newark.",
+    "In May 2025, the facility that guides air traffic in and out of Newark airport suffered a series of significant communications outages.",
+    "The FAA said last ‌year a telecommunications ⁠outage impacted communications and radar displays at Philadelphia TRACON.",
+    "Last year, Congress approved $12.5 billion to address the aging air traffic control system, and boost controller hiring following decades ​of complaints over airport congestion and flight delays and a series of technology issues in recent years."
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "source": "Indian Express",
+  "url": "https://indianexpress.com/article/business/economy/new-gdp-series-28-of-30-manufacturing-categories-used-double-deflation-10888052/",
+  "heading": "New GDP series: 28 of 30 manufacturing categories used double deflation",
+  "category": "Business",
+  "photo": "https://images.indianexpress.com/2026/09/gdp_bef6f7.jpg",
+  "author": "Siddharth Upasani",
+  "date": "2026-09-21T21:16:39+05:30",
+  "totalParagraphs": 21,
+  "paragraphs": [
+    "The new GDP series used the ‘double deflation’ method in 28 of 30 categories for the manufacturing sector, the statistics ministry’s ‘Sources and Methods’ document, released on Monday, said. It added that work is on so that double deflation can be used in the remaining two categories too.",
+    "The two manufacturing sector categories for which the so-called ‘single extrapolation’ method has been used are ‘production, processing and preservation of meat, fish, fruit, vegetables, oils and fats’ and ‘manufacture of pharmaceutical; medicinal chemicals and botanical products’.",
+    "In these two categories, the share of imported inputs is high. This makes it “challenging” to directly map input items with their elementary, item-level output Producer Price Index, the Ministry of Statistics and Programme Implementation (MoSPI) said.",
+    "To find the value added by a sector – or the Gross Value Added (GVA) – the value of inputs it uses is subtracted from the value of output it produces. This is GVA in current prices, or nominal terms. To find the GVA after accounting for changes in prices – or real GVA – the output and input values are adjusted by their respective inflation rates. This is called double deflation.",
+    "Prior to the new GDP series, which has 2022-23 as the base year, that was released earlier this year in February, one of the biggest criticisms of Indian data was MoSPI used double deflation only for agriculture and mining and quarrying sectors. For the others, input and output values were ‘deflated’ by the same number, with the Wholesale Price Index and Consumer Price Index being used. This can be problematic when input and output prices change at different rates. As such, double deflation more accurately measures how much value each sector creates, thus resulting in better estimates of real GDP and real growth.",
+    "While MoSPI moved to double deflation at the time of the new GDP series’ release in February, the numbers released at the end of August made another transition with the use of the output Producer Price Index (PPI) for double deflation.",
+    "“The transition to double deflation marks a major step forward in capturing true economic growth, aligning with global standards and modern statistical practices,” the MoSPI report said.",
+    "The publication of the ‘Sources and Methods for Compilation of National Accounts Statistics’ document comes seven months after the release of the new GDP series with 2022-23 as the base year. This, MoSPI said, is the shortest time it has ever taken to release the full document. Previously, the full document has taken up to three years to be released after the publication of a new GDP series.",
+    "The document brings together the concepts, definitions, data sources, methodologies, and compilation practices used in the new GDP series. It does not contain new data and brings together the recommendations of three reports of sub-committees of the Advisory Committee on National Accounts Statistics. These reports – on methodological improvement for the base revision of GDP, constant price estimates’, and incorporation of new data sources, rates and ratios – were published back in February.",
+    "“We will come out with a set of Frequently Asked Questions if there are lots of questions on the Sources and Methods,” a MoSPI official said on the condition of anonymity.",
+    "The new GDP series has been criticised for its downward revision of nominal GDP in previous years, which reduced the size of the economy. Specifically, a lower nominal GDP in April-June 2025 has been seen by some as a way to show the faster-than-expected 7.8% real growth in April-June 2026.",
+    "In an interview to The Indian Express earlier this month, MoSPI Secretary Saurabh Garg had argued that better capturing of the informal sector had led to downward revision of GVA for certain categories in previous years.",
+    "Under the new series, the nominal GVA attributed to ‘households’ – the proxy for the informal sector – was reduced by Rs 2.9 lakh crore in 2022-23 compared to the old series. This amounts to a 2.7% decline.",
+    "The other two sectors are public sector and private sector.",
+    "The downward revision in household sector GVA in 2022-23 was led by construction. Under the new series, the share of the household sector in construction GVA fell to 59% from 79% in the old series, suggesting the construction sector may be more formal than previously thought.",
+    "On the other hand, some other segments are more informal than what was earlier estimated: trade and repair services, hotels and restaurants, and road transport among them.",
+    "Households may engage in productive activities through unincorporated enterprises that are not legally distinct from their owners. These include sole proprietorships, own-account enterprises, and small partnerships involved in activities such as agriculture, manufacturing, construction, trade, transport, and other services.",
+    "Meanwhile, the nominal value of household savings in the form of gold and silver ornaments in 2022-23 has more than doubled to Rs 1.65 lakh crore from Rs 64,504 crore.",
+    "In 2023-24, these bullion savings rose 4% to Rs 1.72 lakh crore before surging 27% to Rs 2.18 lakh crore in 2025-26.",
+    "Gold prices had risen sharply in 2025 and early 2026.",
+    "Siddharth Upasani is a Deputy Associate Editor with The Indian Express. He reports primarily on data and the economy, looking for trends and changes in the former which paint a picture of the latter. Before The Indian Express, he worked at Moneycontrol and financial newswire Informist (previously called Cogencis). Outside of work, sports, fantasy football, and graphic novels keep him busy. ... Read More"
+  ]
+}
