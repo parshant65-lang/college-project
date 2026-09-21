@@ -1,0 +1,27 @@
+==========================================================
+📰 HEADING:
+Irish privacy regulator fines Google €403 million over location data processing
+
+📸 PHOTO URL:
+https://th-i.thgim.com/public/incoming/xkra79/article71491307.ece/alternates/LANDSCAPE_1200/2026-09-16T120005Z_294817933_RC2FUHALL57L_RTRMADP_3_BRAZIL-GOOGLE-CARBON.JPG
+
+✍️ AUTHOR: Reuters
+📅 DATE: 2026-09-21T17:15:18+05:30
+🔗 URL: https://www.thehindu.com/sci-tech/technology/irish-privacy-regulator-fines-google-403-million-over-location-data-processing/article71491276.ece
+==========================================================
+
+📝 CLEAN ARTICLE BODY:
+
+The lead European ​Union data privacy regulator for most ‌of the biggest internet companies fined ​Alphabet’s Google search engine €403 ⁠million ($463 million) following an inquiry into its processing of location data, Ireland’s ‌Data Protection Commission (DPC) said on Monday (September 21, 2026).
+
+The DPC opened the ‌inquiry in 2020 following ‌complaints ⁠from several European consumer rights ⁠organisations regarding Google’s processing of location data in connection with certain services and products.
+
+“As ​a result ‌of Google’s failures, individuals could have been unaware that their location was being used to, for ‌example, influence them with ads ​or to infer their interests, and could lose control ⁠over their personal data,” DPC Deputy Commissioner Graham Doyle said in ‌a statement.
+
+“The retention of users’ location data for longer than necessary aggravated this loss of control.”
+
+Google did not immediately respond to a Reuters request ‌for comment.
+
+It was the fourth largest ​fine levied by the Irish watchdog, which is the lead ⁠EU regulator for most of ⁠the top U.S. internet firms due to the location of ‌their EU operations in Ireland.
+
+==========================================================
