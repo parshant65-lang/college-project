@@ -28,6 +28,9 @@ function recordInHistory(url) {
   }
 }
 
+// In-memory RSS metadata cache (stores titles/descriptions for paywalled sites like Bloomberg)
+const rssMetadataCache = new Map();
+
 // Polite delay
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -35,14 +38,6 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const ignorePhrases = [
   'subscribed with another email',
   'account subscription benefits',
-  'the view from india',
-  'first day first show',
-  'today\'s cache',
-  'science for all',
-  'data point decoding',
-  'health matters',
-  'gender agenda',
-  'the hindu on books',
   'terms & conditions',
   'comments have to be in english',
   'we have migrated to a new commenting platform',
@@ -50,11 +45,39 @@ const ignorePhrases = [
   'subscribe now',
   'all rights reserved',
   'published -',
-  'updated -'
+  'updated -',
+  'also read',
+  'click here to join',
+  'sign in to continue',
+  'download the app',
+  'follow us on',
+  'to continue, please click the box below'
 ];
 
 /**
- * 1. Scrapes a single article & saves it to Data folder
+ * Universal Source Identifier
+ */
+function getSourceName(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (host.includes('bloomberg')) return 'Bloomberg News';
+    if (host.includes('thehindu')) return 'The Hindu';
+    if (host.includes('indianexpress')) return 'Indian Express';
+    if (host.includes('hindustantimes')) return 'Hindustan Times';
+    if (host.includes('ndtv')) return 'NDTV';
+    if (host.includes('indiatoday')) return 'India Today';
+    if (host.includes('bbc')) return 'BBC News';
+    if (host.includes('livemint')) return 'LiveMint';
+    if (host.includes('timesofindia')) return 'Times of India';
+    return host.replace('www.', '').split('.')[0].toUpperCase();
+  } catch (e) {
+    return 'News';
+  }
+}
+
+/**
+ * 1. Universal Article Scraper
+ * Extracts clean, ad-free article from ANY news website (including Bloomberg)!
  */
 async function scrapeSingleArticle(articleUrl, targetFolder = null) {
   try {
@@ -63,34 +86,141 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
       return { status: 'skipped', heading: 'Already in history registry', filename: '' };
     }
 
-    const res = await fetch(articleUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+    const source = getSourceName(articleUrl);
+    let heading = '';
+    let category = '';
+    let photo = '';
+    let author = '';
+    let date = '';
+    let paragraphs = [];
+
+    // Attempt web fetch with full browser emulation headers
+    let html = '';
+    try {
+      const res = await fetch(articleUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
+        }
+      });
+      if (res.ok) {
+        html = await res.text();
       }
-    });
+    } catch (e) {}
 
-    if (!res.ok) return null;
+    // Check if we hit a bot-block / paywall (common on Bloomberg) or fetch failed
+    const isBlocked = !html || html.includes('please click the box below') || html.includes('robot') || html.length < 500;
 
-    const html = await res.text();
-    const $ = cheerio.load(html);
+    if (!isBlocked) {
+      // Normal HTML extraction
+      const $ = cheerio.load(html);
 
-    // Heading
-    let heading = $('meta[property="og:title"]').attr('content') || 
-                  $('h1').first().text().trim() || 
-                  $('title').text().trim();
-    heading = heading.replace(/\s+/g, ' ').replace(/\|\s*The Hindu.*$/i, '').trim();
+      heading = $('meta[property="og:title"]').attr('content') || 
+                $('h1').first().text().trim() || 
+                $('title').text().trim();
 
-    if (!heading || heading.length < 5) return null;
+      category = $('meta[property="article:section"]').attr('content') || 
+                 $('meta[name="section"]').attr('content') || 
+                 $('meta[property="og:section"]').attr('content') || 
+                 $('.breadcrumb a, .breadcrumb-item').eq(1).text().trim() || '';
 
-    // Generate filename
-    let safeFilename = heading
+      photo = $('meta[property="og:image"]').attr('content') || 
+              $('meta[name="twitter:image"]').attr('content') || 
+              $('article img, figure img').first().attr('src') || '';
+
+      author = $('meta[name="author"]').attr('content') || 
+               $('.author-name, .byline, [rel="author"], .story-byline').first().text().trim() || '';
+
+      date = $('meta[property="article:published_time"]').attr('content') || 
+             $('time').first().text().trim() || '';
+
+      // Universal Body Paragraph Selectors across all sites
+      const bodySelectors = [
+        '.articlebodycontent',
+        '#pcl-full-content',
+        '.story-details',
+        '.story__content',
+        '#ins_storybody',
+        '.detail',
+        '.storyDetails',
+        '.story__description',
+        '.it-story-body',
+        '[itemprop="articleBody"]',
+        'main article',
+        'article'
+      ];
+
+      let bodyContainer = null;
+      for (const sel of bodySelectors) {
+        const el = $(sel);
+        if (el.length > 0 && el.find('p').length > 0) {
+          bodyContainer = el;
+          break;
+        }
+      }
+
+      const targetElements = bodyContainer ? bodyContainer.find('p') : $('p');
+
+      targetElements.each((_, el) => {
+        const text = $(el).text().replace(/\s+/g, ' ').trim();
+        const lower = text.toLowerCase();
+        const shouldIgnore = ignorePhrases.some(phrase => lower.includes(phrase));
+
+        if (text.length > 50 && !shouldIgnore) {
+          paragraphs.push(text);
+        }
+      });
+    }
+
+    // Fallback: If blocked (e.g. Bloomberg bot protection), recover from RSS metadata cache!
+    if (paragraphs.length === 0 && rssMetadataCache.has(articleUrl)) {
+      const cached = rssMetadataCache.get(articleUrl);
+      heading = cached.title || heading;
+      category = cached.category || category;
+      date = cached.date || date;
+      author = `${source} Editorial`;
+      if (cached.description) {
+        paragraphs = [cached.description];
+      }
+      if (source === 'Bloomberg News') {
+        photo = 'https://assets.bwbx.io/s3/javelin/public/hub/images/og-image-bloomberg.png';
+      }
+    }
+
+    // Clean up heading
+    heading = heading.replace(/\s+/g, ' ')
+      .replace(/\|\s*(Bloomberg|The Hindu|Indian Express|Hindustan Times|NDTV|India Today|BBC).*$/i, '')
+      .replace(/-\s*(Bloomberg|The Hindu|Indian Express|Hindustan Times|NDTV|India Today|BBC).*$/i, '')
+      .trim();
+
+    if (!heading || heading.length < 5 || paragraphs.length === 0) return null;
+
+    // Fallback category from URL pathname
+    if (!category) {
+      try {
+        const parts = new URL(articleUrl).pathname.split('/').filter(Boolean);
+        if (parts.length > 0) {
+          let seg = parts[0];
+          if ((seg === 'news' || seg === 'article' || seg === 'section') && parts[1]) seg = parts[1];
+          category = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/[-_]/g, ' ');
+        }
+      } catch (e) {}
+    }
+    if (!category || category.length > 30) category = 'General';
+
+    if (photo && photo.startsWith('//')) photo = 'https:' + photo;
+
+    // Generate filename with source prefix
+    const sourceSlug = source.toLowerCase().replace(/[^a-z0-9]+/g, '');
+    let safeHeading = heading
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/^_+|_+$/g, '')
-      .slice(0, 60);
+      .slice(0, 50);
 
-    // Determine target save directory with Date & Time (e.g. Data/2026-09-21/Run_11-59-19PM/)
+    const safeFilename = `${sourceSlug}_${safeHeading}`;
+
+    // Target save directory with Date & Time (e.g. Data/2026-09-22/Run_12-00AM/)
     let saveDir = targetFolder;
     if (!saveDir) {
       const now = new Date();
@@ -114,55 +244,9 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
       return { status: 'skipped', heading, filename: safeFilename };
     }
 
-    // Category
-    let category = $('meta[property="article:section"]').attr('content') || 
-                   $('meta[name="section"]').attr('content') || 
-                   $('meta[property="og:section"]').attr('content') || 
-                   $('.breadcrumb a, .breadcrumb-item').eq(1).text().trim() || '';
-
-    // Fallback category from URL pathname if meta tag is empty
-    if (!category) {
-      try {
-        const pathSegments = new URL(articleUrl).pathname.split('/').filter(Boolean);
-        if (pathSegments.length > 0) {
-          const seg = pathSegments[0] === 'news' && pathSegments[1] ? pathSegments[1] : pathSegments[0];
-          category = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/[-_]/g, ' ');
-        }
-      } catch (e) {}
-    }
-    if (!category) category = 'General';
-
-    // Photo
-    let photo = $('meta[property="og:image"]').attr('content') || 
-                $('meta[name="twitter:image"]').attr('content') || 
-                $('.lead-img img, article img, figure img').first().attr('src') || '';
-    if (photo && photo.startsWith('//')) photo = 'https:' + photo;
-
-    // Author & Date
-    const author = $('meta[name="author"]').attr('content') || 
-                   $('.author-name, .byline, [rel="author"]').first().text().trim() || '';
-    const date = $('meta[property="article:published_time"]').attr('content') || 
-                 $('time').first().text().trim() || '';
-
-    // Article Paragraphs
-    const paragraphs = [];
-    const bodyContainer = $('.articlebodycontent, [itemprop="articleBody"], .story-body, article');
-    const targetElements = bodyContainer.length > 0 ? bodyContainer.find('p') : $('p');
-
-    targetElements.each((_, el) => {
-      const text = $(el).text().replace(/\s+/g, ' ').trim();
-      const lower = text.toLowerCase();
-      const shouldIgnore = ignorePhrases.some(phrase => lower.includes(phrase));
-
-      if (text.length > 50 && !shouldIgnore) {
-        paragraphs.push(text);
-      }
-    });
-
-    if (paragraphs.length === 0) return null;
-
-    // Save clean JSON file inside date-wise folder
+    // Clean JSON Object
     const articleData = {
+      source,
       url: articleUrl,
       heading,
       category,
@@ -175,152 +259,210 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
 
     fs.writeFileSync(jsonFilePath, JSON.stringify(articleData, null, 2));
 
-    // Update latest.json in main Data folder for quick inspection
+    // Update latest.json for quick preview
     fs.writeFileSync(path.join(dataDir, 'latest.json'), JSON.stringify(articleData, null, 2));
 
     // Record URL in master history registry
     recordInHistory(articleUrl);
 
-    return { status: 'saved', heading, category, photo, paragraphsCount: paragraphs.length, filename: `${today}/${safeFilename}` };
+    return { status: 'saved', source, heading, category, photo, paragraphsCount: paragraphs.length, filename: safeFilename };
   } catch (err) {
     return null;
   }
 }
 
 /**
- * 2. Master Sitemap, RSS & Section Scanner
- * Automatically checks Google News XML Sitemaps, Update Sitemaps,
- * Section Pages, and RSS feeds to discover 500+ to 1,000+ articles!
+ * 2. MASTER MULTI-SOURCE REGISTRY
+ * Configured with Bloomberg News + Top Indian and Global News Networks
  */
-async function discoverAllWebsiteArticles(baseUrl) {
-  const origin = new URL(baseUrl).origin;
+const NEWS_SOURCES = [
+  {
+    name: 'Bloomberg News',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Markets' },
+      { url: 'https://feeds.bloomberg.com/technology/news.rss', category: 'Technology' },
+      { url: 'https://feeds.bloomberg.com/politics/news.rss', category: 'Politics' },
+      { url: 'https://feeds.bloomberg.com/wealth/news.rss', category: 'Wealth' },
+      { url: 'https://feeds.bloomberg.com/economics/news.rss', category: 'Economics' },
+      { url: 'https://feeds.bloomberg.com/industries/news.rss', category: 'Industries' },
+      { url: 'https://feeds.bloomberg.com/crypto/news.rss', category: 'Crypto' },
+      { url: 'https://feeds.bloomberg.com/businessweek/news.rss', category: 'Businessweek' }
+    ]
+  },
+  {
+    name: 'The Hindu',
+    sitemaps: [
+      'https://www.thehindu.com/sitemap/googlenews/all/all.xml',
+      'https://www.thehindu.com/sitemap/update/all.xml'
+    ],
+    rssFeeds: [
+      { url: 'https://www.thehindu.com/feeder/default.rss', category: 'Top News' },
+      { url: 'https://www.thehindu.com/news/national/feeder/default.rss', category: 'National' },
+      { url: 'https://www.thehindu.com/business/feeder/default.rss', category: 'Business' },
+      { url: 'https://www.thehindu.com/sport/feeder/default.rss', category: 'Sport' }
+    ]
+  },
+  {
+    name: 'The Indian Express',
+    sitemaps: [
+      'https://indianexpress.com/news-sitemap.xml'
+    ],
+    rssFeeds: [
+      { url: 'https://indianexpress.com/feed/', category: 'National' }
+    ]
+  },
+  {
+    name: 'Hindustan Times',
+    sitemaps: [
+      'https://www.hindustantimes.com/sitemap/news.xml'
+    ],
+    rssFeeds: [
+      { url: 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml', category: 'National' },
+      { url: 'https://www.hindustantimes.com/feeds/rss/business/rssfeed.xml', category: 'Business' },
+      { url: 'https://www.hindustantimes.com/feeds/rss/sports/rssfeed.xml', category: 'Sports' }
+    ]
+  },
+  {
+    name: 'NDTV News',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://feeds.feedburner.com/ndtvnews-top-stories', category: 'Top Stories' },
+      { url: 'https://feeds.feedburner.com/ndtvnews-latest', category: 'Latest' },
+      { url: 'https://feeds.feedburner.com/ndtvnews-india-news', category: 'National' },
+      { url: 'https://feeds.feedburner.com/ndtvnews-world-news', category: 'World' },
+      { url: 'https://feeds.feedburner.com/ndtvprofit-latest', category: 'Business' },
+      { url: 'https://feeds.feedburner.com/ndtvsports-cricket', category: 'Sports' }
+    ]
+  },
+  {
+    name: 'India Today',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://www.indiatoday.in/rss/home', category: 'Top News' },
+      { url: 'https://www.indiatoday.in/rss/1206584', category: 'National' },
+      { url: 'https://www.indiatoday.in/rss/1206577', category: 'World' },
+      { url: 'https://www.indiatoday.in/rss/1206550', category: 'Business' }
+    ]
+  },
+  {
+    name: 'BBC News',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://feeds.bbci.co.uk/news/rss.xml', category: 'World' },
+      { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'World' },
+      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', category: 'Business' }
+    ]
+  }
+];
+
+/**
+ * 3. Master Multi-Source Discovery
+ * Scans ALL configured news websites via Sitemaps and RSS feeds
+ */
+async function discoverAllNewsSources() {
   console.log(`\n==========================================================`);
-  console.log(`🗺️  MASTER SITEMAP & SECTION SCANNER`);
-  console.log(`🎯 Target Domain: ${origin}`);
+  console.log(`🌐  UNIVERSAL MULTI-SOURCE NEWS SCANNER`);
+  console.log(`📡  Scanning ${NEWS_SOURCES.length} major news networks simultaneously...`);
   console.log(`==========================================================`);
 
   const allArticles = new Set();
 
-  // 1. High-Yield XML Sitemaps (Official Google News & Update feeds - 500+ articles each)
-  const sitemaps = [
-    `${origin}/sitemap/googlenews/all/all.xml`,
-    `${origin}/sitemap/update/all.xml`,
-    `${origin}/sitemap.xml`,
-    `${origin}/news-sitemap.xml`
-  ];
+  for (const src of NEWS_SOURCES) {
+    console.log(`\n🔍 Source: ${src.name}`);
+    let srcCount = 0;
 
-  console.log(`\n📡 PHASE 1: Scanning XML Sitemaps (Fast Bulk Discovery)...`);
-  for (const sitemapUrl of sitemaps) {
-    try {
-      process.stdout.write(`   Scanning Sitemap: ${sitemapUrl} ... `);
-      const res = await fetch(sitemapUrl, {
-        headers: { 
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' 
+    // 1. Sitemaps
+    for (const smUrl of src.sitemaps) {
+      try {
+        process.stdout.write(`   Scanning Sitemap: ${smUrl} ... `);
+        const res = await fetch(smUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36' }
+        });
+        if (!res.ok) {
+          console.log(`skipped (${res.status})`);
+          continue;
         }
-      });
 
-      if (!res.ok) {
-        console.log(`skipped (${res.status})`);
-        continue;
-      }
+        const xml = await res.text();
+        const locMatches = xml.match(/<loc>(.*?)<\/loc>/gi) || [];
+        let added = 0;
 
-      const xml = await res.text();
-      // Match all <loc>...</loc> tags
-      const locMatches = xml.match(/<loc>(.*?)<\/loc>/gi) || [];
-      let addedFromThis = 0;
-
-      for (const locTag of locMatches) {
-        const cleanUrl = locTag.replace(/<\/?loc>/gi, '').trim().split('?')[0].split('#')[0];
-        // Ensure it's a valid article URL
-        if (cleanUrl.startsWith('http') && (cleanUrl.includes('/article') || cleanUrl.endsWith('.ece') || cleanUrl.match(/\/\d{6,}/))) {
-          if (!allArticles.has(cleanUrl)) {
-            allArticles.add(cleanUrl);
-            addedFromThis++;
+        for (const locTag of locMatches) {
+          const cleanUrl = locTag.replace(/<\/?loc>/gi, '').trim().split('?')[0].split('#')[0];
+          if (cleanUrl.startsWith('http') && (cleanUrl.includes('/article') || cleanUrl.includes('.ece') || cleanUrl.includes('.html') || cleanUrl.match(/\/\d{5,}/))) {
+            if (!allArticles.has(cleanUrl)) {
+              allArticles.add(cleanUrl);
+              added++;
+              srcCount++;
+            }
           }
         }
+        console.log(`✅ +${added} articles`);
+      } catch (e) {
+        console.log(`failed`);
       }
-
-      console.log(`✅ +${addedFromThis} articles found!`);
-    } catch (err) {
-      console.log(`failed`);
     }
-  }
 
-  // 2. Scan Standard Sections & RSS Feeds for any remaining or breaking news
-  console.log(`\n📡 PHASE 2: Scanning Section Categories & RSS Feeds...`);
-  const sections = [
-    origin,
-    `${origin}/news/national/`,
-    `${origin}/news/international/`,
-    `${origin}/business/`,
-    `${origin}/sport/`,
-    `${origin}/sci-tech/`,
-    `${origin}/opinion/`,
-    `${origin}/feeder/default.rss`,
-    `${origin}/news/national/feeder/default.rss`,
-    `${origin}/business/feeder/default.rss`,
-    `${origin}/sport/feeder/default.rss`
-  ];
-
-  for (const targetUrl of sections) {
-    try {
-      process.stdout.write(`   Scanning: ${targetUrl} ... `);
-      const res = await fetch(targetUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-      });
-      if (!res.ok) {
-        console.log(`skipped (${res.status})`);
-        continue;
-      }
-
-      const content = await res.text();
-      let beforeCount = allArticles.size;
-
-      if (targetUrl.endsWith('.rss') || content.includes('<rss') || content.includes('<feed')) {
-        // Parse RSS Feed
-        const $ = cheerio.load(content, { xmlMode: true });
-        $('item link, entry link').each((_, el) => {
-          let link = ($(el).text() || $(el).attr('href') || '').trim().split('?')[0].split('#')[0];
-          if (link.startsWith('http')) allArticles.add(link);
+    // 2. RSS Feeds (Includes Bloomberg News Feeds)
+    for (const feed of src.rssFeeds) {
+      try {
+        process.stdout.write(`   Scanning RSS: ${feed.url} ... `);
+        const res = await fetch(feed.url, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
         });
-      } else {
-        // Parse HTML Page
-        const $ = cheerio.load(content);
-        $('a').each((_, el) => {
-          let href = $(el).attr('href');
-          if (href) {
-            const isArticle = (href.includes('/article') || href.includes('/news/')) && 
-                              (href.endsWith('.ece') || href.includes('/202'));
-            if (isArticle) {
-              if (!href.startsWith('http')) {
-                href = origin + (href.startsWith('/') ? '' : '/') + href;
-              }
-              href = href.split('?')[0].split('#')[0];
-              allArticles.add(href);
+        if (!res.ok) {
+          console.log(`skipped (${res.status})`);
+          continue;
+        }
+
+        const xml = await res.text();
+        const $ = cheerio.load(xml, { xmlMode: true });
+        let added = 0;
+
+        $('item').each((_, el) => {
+          let link = $(el).find('link').text().trim().split('?')[0].split('#')[0];
+          const title = $(el).find('title').text().trim();
+          const description = $(el).find('description').text().replace(/<[^>]+>/g, '').trim();
+          const pubDate = $(el).find('pubDate').text().trim();
+
+          if (link.startsWith('http')) {
+            // Cache rich metadata for Bloomberg and paywalled news
+            rssMetadataCache.set(link, {
+              title,
+              description,
+              date: pubDate,
+              category: feed.category || '',
+              source: src.name
+            });
+
+            if (!allArticles.has(link)) {
+              allArticles.add(link);
+              added++;
+              srcCount++;
             }
           }
         });
+        console.log(`✅ +${added} articles`);
+      } catch (e) {
+        console.log(`failed`);
       }
-
-      let newFound = allArticles.size - beforeCount;
-      console.log(`+${newFound} new articles (Running Total: ${allArticles.size})`);
-    } catch (e) {
-      console.log('failed');
     }
+
+    console.log(`   📊 ${src.name} Total Contributed: ${srcCount} articles`);
   }
 
   return Array.from(allArticles);
 }
 
 /**
- * 3. Master Multi-Threaded Crawler
- * Downloads ALL discovered articles without arbitrary limit!
+ * 4. Master Parallel Crawler Engine
  */
-async function crawlAllArticles(baseUrl, concurrency = 5) {
-  const articleLinks = await discoverAllWebsiteArticles(baseUrl);
+async function crawlAllArticles(concurrency = 6) {
+  const articleLinks = await discoverAllNewsSources();
   const total = articleLinks.length;
 
-  // Session run folder with Date and Time: e.g. Data/2026-09-21/Run_11-59-19PM/
+  // Session run folder with Date and Time: e.g. Data/2026-09-22/Run_12-05-59AM/
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -337,26 +479,25 @@ async function crawlAllArticles(baseUrl, concurrency = 5) {
   const sessionDir = path.join(dataDir, dateFolder, timeFolder);
 
   console.log(`\n==========================================================`);
-  console.log(`🎯 TOTAL UNIQUE ARTICLES DISCOVERED: ${total}`);
+  console.log(`🎯 TOTAL ARTICLES DISCOVERED ACROSS ALL SOURCES: ${total}`);
   console.log(`⏰ Run Session Folder: Data/${dateFolder}/${timeFolder}/`);
   console.log(`⚡ Concurrency: ${concurrency} parallel workers`);
-  console.log(`🚀 Starting processing of ALL ${total} articles...`);
+  console.log(`🚀 Starting multi-source download of ALL ${total} articles...`);
   console.log(`==========================================================\n`);
 
   let savedCount = 0;
   let skippedCount = 0;
   let currentIndex = 0;
 
-  // Worker queue for fast parallel downloading
+  // Worker queue
   async function worker(workerId) {
     while (currentIndex < articleLinks.length) {
       const index = currentIndex++;
       const url = articleLinks[index];
       const progress = `[${index + 1}/${total}] (${Math.round(((index + 1) / total) * 100)}%)`;
 
-      // Instant history check: skip without making network request!
+      // Instant history check: skip without sending HTTP request!
       if (scrapedHistory.has(url)) {
-        console.log(`${progress} ⏩ Skipped (already in history.txt): ${url.slice(0, 50)}...`);
         skippedCount++;
         continue;
       }
@@ -364,27 +505,24 @@ async function crawlAllArticles(baseUrl, concurrency = 5) {
       const result = await scrapeSingleArticle(url, sessionDir);
       if (result) {
         if (result.status === 'skipped') {
-          console.log(`${progress} ⏩ Skipped (already exists): "${result.heading.slice(0, 48)}..."`);
           skippedCount++;
         } else {
-          console.log(`${progress} ✅ [SAVED] [${result.category}]: "${result.heading.slice(0, 42)}..." (${result.paragraphsCount} paras)`);
+          console.log(`${progress} ✅ [SAVED] [${result.source}] [${result.category}]: "${result.heading.slice(0, 38)}..." (${result.paragraphsCount} paras)`);
           savedCount++;
         }
       } else {
-        console.log(`${progress} ⚠️ Skipped invalid: ${url.slice(0, 50)}...`);
+        // Not a standard article or video link
       }
 
-      // Small delay between requests to remain polite
-      await sleep(200);
+      await sleep(150);
     }
   }
 
-  // Launch parallel workers
   const workers = Array.from({ length: concurrency }, (_, i) => worker(i + 1));
   await Promise.all(workers);
 
   console.log(`\n==========================================================`);
-  console.log(`🎉 COMPLETE! ALL SITEMAP & WEBSITE ARTICLES PROCESSED!`);
+  console.log(`🎉 MULTI-SOURCE CRAWL COMPLETE!`);
   console.log(`   ✅ Newly Downloaded & Saved : ${savedCount}`);
   console.log(`   ⏩ Already Downloaded       : ${skippedCount}`);
   if (savedCount > 0) {
@@ -398,15 +536,14 @@ async function crawlAllArticles(baseUrl, concurrency = 5) {
 // --------------------------------------------------------------------------
 // Start Script
 // --------------------------------------------------------------------------
-const target = process.argv[2] || 'https://www.thehindu.com/';
+const target = process.argv[2];
 
-// If single article URL passed, download just that one
-if (target.includes('/article') && target.endsWith('.ece')) {
+if (target && target.startsWith('http')) {
   console.log(`\n📌 Single article mode detected: ${target}`);
   scrapeSingleArticle(target).then(res => {
-    if (res) console.log(`✅ Saved: Data/${res.filename}.txt`);
+    if (res) console.log(`✅ Saved: ${res.filename}.json`);
   });
 } else {
-  // Crawl ALL articles via Sitemaps + Sections with 5 parallel workers
-  crawlAllArticles(target, 5);
+  // Crawl ALL configured news sources (Bloomberg News, The Hindu, Indian Express, Hindustan Times, NDTV, India Today, BBC)
+  crawlAllArticles(6);
 }
