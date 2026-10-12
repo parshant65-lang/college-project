@@ -7,4 +7,6 @@ venv/
 Data/
 history.txt
 links_queue.json
+queues/
+history/
 .env

@@ -604,32 +604,44 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null, force = fals
 
     const safeFilename = `${sourceSlug}_${safeHeading}`;
 
-    // Target save directory with Date & Time (e.g. Data/2026-09-22/Run_12-00AM/)
-    let saveDir = targetFolder;
-    if (!saveDir) {
-      const now = new Date();
-      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const hours = now.getHours();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = String(hours % 12 || 12).padStart(2, '0');
-      const timeStr = `Run_${displayHours}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}${ampm}`;
-      saveDir = path.join(dataDir, dateStr, timeStr);
+    // Canonical website slug and target directory hierarchy: Data/<News_Website>/<YYYY>/<MM>/<DD>.json
+    const sourceCanonicalSlug = queueManager.getCanonicalSource(source, articleUrl);
+
+    let articleDateObj = new Date();
+    if (date) {
+      const parsed = new Date(date);
+      if (!isNaN(parsed.getTime())) articleDateObj = parsed;
     }
+    const yearStr = String(articleDateObj.getFullYear());
+    const monthStr = String(articleDateObj.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(articleDateObj.getDate()).padStart(2, '0');
 
-    if (!fs.existsSync(saveDir)) {
-      fs.mkdirSync(saveDir, { recursive: true });
+    const dayDir = path.join(dataDir, sourceCanonicalSlug, yearStr, monthStr);
+    if (!fs.existsSync(dayDir)) {
+      fs.mkdirSync(dayDir, { recursive: true });
     }
+    const jsonFilePath = path.join(dayDir, `${dayStr}.json`);
 
-    const jsonFilePath = path.join(saveDir, `${safeFilename}.json`);
-
-    // If already downloaded previously, skip quickly!
+    // Read existing articles for today
+    let dailyArticles = [];
     if (fs.existsSync(jsonFilePath)) {
+      try {
+        dailyArticles = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
+        if (!Array.isArray(dailyArticles)) dailyArticles = [];
+      } catch(e) {
+        dailyArticles = [];
+      }
+    }
+
+    // Deduplication check
+    const alreadySaved = dailyArticles.some(a => a && a.url === articleUrl);
+    if (alreadySaved) {
       recordInHistory(articleUrl);
       queueManager.markLinkOpened(articleUrl, { heading, source });
       if (discoveredLinks && discoveredLinks.length > 0) {
         queueManager.enqueueLinks(discoveredLinks, source);
       }
-      return { status: 'skipped', heading, filename: safeFilename, discoveredLinks };
+      return { status: 'skipped', heading, filename: `${sourceSlug}_${dayStr}`, discoveredLinks };
     }
 
     // Clean JSON Object
@@ -645,8 +657,10 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null, force = fals
       paragraphs
     };
 
-    // Asynchronously save article without blocking the event loop
-    await fs.promises.writeFile(jsonFilePath, JSON.stringify(articleData, null, 2), 'utf8');
+    dailyArticles.push(articleData);
+
+    // Asynchronously save daily file without blocking the event loop
+    await fs.promises.writeFile(jsonFilePath, JSON.stringify(dailyArticles, null, 2), 'utf8');
 
     // Throttled preview update
     updateLatestJson(articleData);

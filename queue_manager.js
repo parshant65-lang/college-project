@@ -1,13 +1,24 @@
 const fs = require('fs');
 const path = require('path');
 
-const queueFile = path.join(__dirname, 'links_queue.json');
-const historyFile = path.join(__dirname, 'history.txt');
+const queuesDir = path.join(__dirname, 'queues');
+const historyDir = path.join(__dirname, 'history');
+const historyFile = path.join(historyDir, 'history.txt');
+const statsFile = path.join(__dirname, 'stats.json');
+
+// Ensure required directories exist
+if (!fs.existsSync(queuesDir)) fs.mkdirSync(queuesDir, { recursive: true });
+if (!fs.existsSync(historyDir)) fs.mkdirSync(historyDir, { recursive: true });
 
 // Master memory cache
-let queue = [];
-const urlToItemMap = new Map(); // normalizedUrl -> queueItem
-const scrapedHistory = new Set();
+const sourceQueues = new Map();   // sourceSlug -> array of URLs
+const sourcePointers = new Map(); // sourceSlug -> pointer index
+const enqueuedUrls = new Set();   // O(1) global membership check
+const scrapedHistory = new Set(); // O(1) history check
+let sourceNames = [];
+let currentSourceIndex = 0;
+let totalPendingCount = 0;
+const MAX_QUEUE_PER_SOURCE = 300; // Cap to keep each queue file lightweight (< 40 KB)
 
 /**
  * Smart URL Normalizer: removes tracking parameters, query strings, hashes, and trailing slashes
@@ -15,7 +26,7 @@ const scrapedHistory = new Set();
 function normalizeUrl(rawUrl) {
   try {
     const u = new URL(rawUrl);
-    u.protocol = 'https:'; // Unify http and https so we never have duplicate URLs
+    u.protocol = 'https:';
     u.hash = '';
     u.search = '';
     let clean = u.href;
@@ -29,9 +40,7 @@ function normalizeUrl(rawUrl) {
 }
 
 /**
- * Strict Financial & Business Story URL Validator:
- * Rejects non-news utilities, calculators, author profiles, topic tags, video players, games,
- * and ALL non-financial topics (crimes, murder, sports, cinema, astrology, gossip).
+ * Strict Financial & Business Story URL Validator
  */
 function isRealStory(url) {
   try {
@@ -66,7 +75,7 @@ function isRealStory(url) {
     ];
     if (nonFinancialBlacklist.some(b => p.includes(b))) return false;
 
-    // 3. Dedicated Financial Portals: 100% focused on business & economy
+    // 3. Dedicated Financial Portals
     const dedicatedFinancialDomains = [
       'economictimes.indiatimes.com',
       'livemint.com',
@@ -80,7 +89,7 @@ function isRealStory(url) {
 
     const isDedicated = dedicatedFinancialDomains.some(d => host.endsWith(d));
 
-    // 4. LiveMint: Strictly enforce business sections (filter out general /news/india/ and /news/world/ crime/politics)
+    // 4. LiveMint: Strictly enforce business sections
     if (host.includes('livemint')) {
       const liveMintBizSections = ['/market', '/companies', '/money', '/industry', '/economy', '/budget', '/mutual-funds', '/banking', '/technology', '/opinion', '/business'];
       const hasBizSection = liveMintBizSections.some(sec => p.includes(sec));
@@ -89,48 +98,25 @@ function isRealStory(url) {
       return false;
     }
 
-    // 5. If from a general news network, REQUIRE business / economy / markets section
+    // 5. General news network: REQUIRE business / economy / markets section
     if (!isDedicated) {
       const allowedSections = ['/business', '/economy', '/market', '/markets', '/industry', '/money', '/finance', '/profit', '/stocks', '/banking', '/tech'];
       const hasBizSection = allowedSections.some(sec => p.includes(sec));
       if (!hasBizSection) return false;
     }
 
-    // 6. Validate article structure pattern for each publication
-    // Hindustan Times
+    // 6. Article structure patterns
     if (p.endsWith('.html') && /-\d{8,}\.html$/.test(p)) return true;
-
-    // Moneycontrol: genuine news & market reports with story ID
     if (host.includes('moneycontrol') && (p.includes('/news/') || p.includes('/market/')) && /[-_]\d{5,}\.html$/.test(p)) return true;
-
-    // Business Standard: dedicated financial publication (all article IDs)
     if (host.includes('business-standard') && /-\d+(_\d+)?\.html$/.test(p)) return true;
-
-    // Financial Express: dedicated financial publication
     if (host.includes('financialexpress') && (/-\d+\/?$/.test(p) || /-\d+\.html$/.test(p))) return true;
-
-    // The Hindu
     if (p.endsWith('.ece') && /article\d+\.ece$/.test(p)) return true;
-
-    // Times of India, The Economic Times
     if (p.includes('/articleshow/') && p.endsWith('.cms')) return true;
-
-    // Aaj Tak & India Today
     if ((p.includes('/story/') || p.includes('/trending/') || p.includes('/national/')) && /-\d{5,}/.test(p)) return true;
-
-    // BBC News (both modern /articles/c... and classic 8-digit)
     if (/\/articles\/c[a-z0-9]{8,}/i.test(p) || (host.includes('bbc.') && /-\d{7,8}$/.test(p))) return true;
-
-    // Bloomberg News (both /news/ and /opinion/)
     if (/\/(news|opinion)\/articles\/\d{4}-\d{2}-\d{2}\//i.test(p)) return true;
-
-    // Indian Express
     if (/\/article\/.*-\d{6,}$/i.test(p)) return true;
-
-    // NDTV / NDTV Profit
     if (host.includes('ndtv') && /-\d{6,}$/.test(p)) return true;
-
-    // Yahoo Finance
     if (host.includes('yahoo.com') && (p.includes('/articles/') || p.includes('/article/') || p.includes('/news/')) && p.endsWith('.html')) return true;
 
     return false;
@@ -140,40 +126,59 @@ function isRealStory(url) {
 }
 
 /**
- * Universal Source Identifier
+ * Canonical Source Slug Identifier (Unifies all publication names)
  */
-function getSourceName(url) {
-  try {
-    const host = new URL(url).hostname.toLowerCase();
-    if (host.includes('economictimes')) return 'The Economic Times';
-    if (host.includes('livemint')) return 'LiveMint';
-    if (host.includes('moneycontrol')) return 'Moneycontrol';
-    if (host.includes('business-standard')) return 'Business Standard';
-    if (host.includes('bloomberg')) return 'Bloomberg News';
-    if (host.includes('yahoo.com')) return 'Yahoo Finance';
-    if (host.includes('ndtvprofit') || host.includes('ndtv')) return 'NDTV Profit';
-    if (host.includes('thehindu')) return 'The Hindu Business';
-    if (host.includes('indianexpress')) return 'Indian Express Business';
-    if (host.includes('hindustantimes')) return 'Hindustan Times Business';
-    if (host.includes('timesofindia') || host.includes('indiatimes')) return 'Times of India Business';
-    if (host.includes('bbc')) return 'BBC Business';
-    if (host.includes('aajtak')) return 'Aaj Tak Business';
-    if (host.includes('indiatoday')) return 'India Today Business';
-    return host.replace('www.', '').split('.')[0].toUpperCase();
-  } catch (e) {
-    return 'Finance';
+function getCanonicalSource(sourceName, url) {
+  let s = (sourceName || '').trim().replace(/\s+Business$/i, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const low = s.toLowerCase();
+  if (low.includes('economic')) return 'The_Economic_Times';
+  if (low.includes('livemint')) return 'LiveMint';
+  if (low.includes('moneycontrol')) return 'Moneycontrol';
+  if (low.includes('business_standard') || low.includes('business-standard')) return 'Business_Standard';
+  if (low.includes('bloomberg')) return 'Bloomberg_News';
+  if (low.includes('yahoo')) return 'Yahoo_Finance';
+  if (low.includes('ndtv')) return 'NDTV_Profit';
+  if (low.includes('hindu')) return 'The_Hindu';
+  if (low.includes('indian_express')) return 'Indian_Express';
+  if (low.includes('hindustan_times')) return 'Hindustan_Times';
+  if (low.includes('times_of_india') || low.includes('indiatimes')) return 'Times_of_India';
+  if (low.includes('bbc')) return 'BBC_Business';
+  if (low.includes('aaj_tak') || low.includes('aajtak')) return 'Aaj_Tak';
+  if (low.includes('india_today')) return 'India_Today';
+
+  // Fallback to URL inspection
+  if (url) {
+    try {
+      const h = new URL(url).hostname.toLowerCase();
+      if (h.includes('economictimes')) return 'The_Economic_Times';
+      if (h.includes('livemint')) return 'LiveMint';
+      if (h.includes('moneycontrol')) return 'Moneycontrol';
+      if (h.includes('business-standard')) return 'Business_Standard';
+      if (h.includes('bloomberg')) return 'Bloomberg_News';
+      if (h.includes('yahoo')) return 'Yahoo_Finance';
+      if (h.includes('ndtv')) return 'NDTV_Profit';
+      if (h.includes('thehindu')) return 'The_Hindu';
+      if (h.includes('indianexpress')) return 'Indian_Express';
+      if (h.includes('hindustantimes')) return 'Hindustan_Times';
+      if (h.includes('timesofindia') || h.includes('indiatimes')) return 'Times_of_India';
+      if (h.includes('bbc')) return 'BBC_Business';
+      if (h.includes('aajtak')) return 'Aaj_Tak';
+      if (h.includes('indiatoday')) return 'India_Today';
+    } catch(e) {}
   }
+
+  return s || 'General_News';
 }
 
-/**
- * Check whether a target URL belongs to the same publication apex domain
- * or any of the supported financial news networks
- */
+function getSourceName(url) {
+  const canon = getCanonicalSource('', url);
+  return canon.replace(/_/g, ' ');
+}
+
 function isSameOrSupportedNetwork(targetUrl, currentUrl) {
   try {
     const tHost = new URL(targetUrl).hostname.toLowerCase();
     const cHost = new URL(currentUrl).hostname.toLowerCase();
-
     const getApex = (h) => {
       const parts = h.split('.');
       if (parts.length >= 2) {
@@ -184,14 +189,7 @@ function isSameOrSupportedNetwork(targetUrl, currentUrl) {
       }
       return h;
     };
-
-    const tApex = getApex(tHost);
-    const cApex = getApex(cHost);
-
-    if (tApex === cApex || tHost.includes(cApex) || cHost.includes(tApex)) {
-      return true;
-    }
-
+    if (getApex(tHost) === getApex(cHost)) return true;
     const supported = [
       'economictimes.indiatimes.com', 'livemint.com', 'bloomberg.com',
       'moneycontrol.com', 'business-standard.com', 'financialexpress.com',
@@ -199,15 +197,15 @@ function isSameOrSupportedNetwork(targetUrl, currentUrl) {
       'hindustantimes.com', 'ndtv.com', 'indiatoday.in', 'bbc.com',
       'bbc.co.uk', 'timesofindia.indiatimes.com', 'aajtak.in'
     ];
-
     return supported.some(d => tHost.endsWith(d));
-  } catch (e) {
+  } catch(e) {
     return false;
   }
 }
 
 // 1. Load History
 function loadHistory() {
+  scrapedHistory.clear();
   if (fs.existsSync(historyFile)) {
     try {
       const lines = fs.readFileSync(historyFile, 'utf8').split('\n');
@@ -222,60 +220,61 @@ function loadHistory() {
   }
 }
 
-// 2. High-Performance Multi-Source Queue State
-const sourceQueues = new Map();   // sourceName -> array of items
-const sourcePointers = new Map(); // sourceName -> current read index
-let sourceNames = [];
-let sourceIndex = 0;
-let unopenedCount = 0;
-let openedCount = 0;
-
-function addToSourceQueue(item) {
-  const src = item.source || 'News';
-  if (!sourceQueues.has(src)) {
-    sourceQueues.set(src, []);
-    sourcePointers.set(src, 0);
-    sourceNames.push(src);
-  }
-  sourceQueues.get(src).push(item);
-}
-
+// 2. Load Partitioned Queues
 function loadQueue() {
   loadHistory();
-  if (fs.existsSync(queueFile)) {
-    try {
-      const data = fs.readFileSync(queueFile, 'utf8');
-      queue = JSON.parse(data);
-      if (!Array.isArray(queue)) queue = [];
-    } catch(e) {
-      queue = [];
+  sourceQueues.clear();
+  sourcePointers.clear();
+  enqueuedUrls.clear();
+  sourceNames = [];
+  totalPendingCount = 0;
+
+  if (fs.existsSync(queuesDir)) {
+    const files = fs.readdirSync(queuesDir).filter(f => f.endsWith('.json'));
+    for (const f of files) {
+      const slug = f.replace(/\.json$/, '');
+      try {
+        const content = JSON.parse(fs.readFileSync(path.join(queuesDir, f), 'utf8'));
+        if (Array.isArray(content)) {
+          const active = [];
+          for (const rawUrl of content) {
+            const url = typeof rawUrl === 'string' ? rawUrl : (rawUrl.url || '');
+            if (!url) continue;
+            const norm = normalizeUrl(url);
+            if (!scrapedHistory.has(norm) && !scrapedHistory.has(url)) {
+              active.push(url);
+              enqueuedUrls.add(norm);
+              enqueuedUrls.add(url);
+            }
+          }
+          sourceQueues.set(slug, active);
+          sourcePointers.set(slug, 0);
+          sourceNames.push(slug);
+          totalPendingCount += active.length;
+        }
+      } catch(e) {}
     }
   }
 
-  urlToItemMap.clear();
-  sourceQueues.clear();
-  sourcePointers.clear();
-  sourceNames = [];
-  sourceIndex = 0;
-  unopenedCount = 0;
-  openedCount = 0;
-
-  for (const item of queue) {
-    if (item && item.url) {
-      const norm = normalizeUrl(item.url);
-      urlToItemMap.set(norm, item);
-      urlToItemMap.set(item.url, item);
-      if (item.status === 'unopened') {
-        addToSourceQueue(item);
-        unopenedCount++;
-      } else if (item.status === 'opened') {
-        openedCount++;
-      }
+  // Ensure default sources are registered
+  const defaultSources = [
+    'The_Economic_Times', 'LiveMint', 'Moneycontrol', 'Business_Standard',
+    'Yahoo_Finance', 'NDTV_Profit', 'The_Hindu', 'Times_of_India',
+    'Bloomberg_News', 'Indian_Express', 'Hindustan_Times', 'BBC_Business', 'Aaj_Tak'
+  ];
+  for (const ds of defaultSources) {
+    if (!sourceQueues.has(ds)) {
+      sourceQueues.set(ds, []);
+      sourcePointers.set(ds, 0);
+      sourceNames.push(ds);
     }
   }
 }
 
-// High-Performance Async Debounced Disk Save
+// Initialize on require
+loadQueue();
+
+// Async Debounced Disk Save
 let saveTimeout = null;
 let isSaving = false;
 let needsSaveAgain = false;
@@ -285,7 +284,7 @@ function scheduleSave() {
   saveTimeout = setTimeout(async () => {
     saveTimeout = null;
     await saveQueueAsync();
-  }, 2500); // Debounce to 2.5 seconds during high-speed runs
+  }, 2000);
 }
 
 async function saveQueueAsync() {
@@ -295,11 +294,13 @@ async function saveQueueAsync() {
   }
   isSaving = true;
   try {
-    const tmpFile = queueFile + '.tmp';
-    const jsonStr = JSON.stringify(queue);
-    await fs.promises.writeFile(tmpFile, jsonStr, 'utf8');
-    await fs.promises.rename(tmpFile, queueFile);
-  } catch (err) {
+    for (const [slug, list] of sourceQueues.entries()) {
+      const qPath = path.join(queuesDir, `${slug}.json`);
+      const tmpPath = qPath + '.tmp';
+      await fs.promises.writeFile(tmpPath, JSON.stringify(list, null, 2), 'utf8');
+      await fs.promises.rename(tmpPath, qPath);
+    }
+  } catch(e) {
   } finally {
     isSaving = false;
     if (needsSaveAgain) {
@@ -311,29 +312,17 @@ async function saveQueueAsync() {
 
 function saveQueueSync() {
   try {
-    const tmpFile = queueFile + '.tmp';
-    fs.writeFileSync(tmpFile, JSON.stringify(queue), 'utf8');
-    fs.renameSync(tmpFile, queueFile);
-  } catch (err) {
-    try {
-      fs.writeFileSync(queueFile, JSON.stringify(queue), 'utf8');
-    } catch(e) {}
-  }
+    for (const [slug, list] of sourceQueues.entries()) {
+      const qPath = path.join(queuesDir, `${slug}.json`);
+      const tmpPath = qPath + '.tmp';
+      fs.writeFileSync(tmpPath, JSON.stringify(list, null, 2), 'utf8');
+      fs.renameSync(tmpPath, qPath);
+    }
+  } catch(e) {}
 }
 
-// Ensure data is saved on exit
-process.on('exit', () => saveQueueSync());
-process.on('SIGINT', () => {
-  saveQueueSync();
-  process.exit();
-});
-
-// Initialize on load
-loadQueue();
-
 /**
- * Enqueue links into links_queue.json
- * Marks them as 'unopened'
+ * Enqueue Links across Partitioned Sources
  */
 function enqueueLinks(urls, defaultSource = null) {
   if (!urls || !Array.isArray(urls)) return 0;
@@ -345,26 +334,30 @@ function enqueueLinks(urls, defaultSource = null) {
     if (!isRealStory(cleanUrl)) continue;
 
     const norm = normalizeUrl(cleanUrl);
-    // Skip if already in scrapedHistory
     if (scrapedHistory.has(norm) || scrapedHistory.has(cleanUrl)) continue;
+    if (enqueuedUrls.has(norm) || enqueuedUrls.has(cleanUrl)) continue;
 
-    // Skip if already present in queue
-    if (urlToItemMap.has(norm) || urlToItemMap.has(cleanUrl)) continue;
+    const slug = getCanonicalSource(defaultSource, cleanUrl);
+    if (!sourceQueues.has(slug)) {
+      sourceQueues.set(slug, []);
+      sourcePointers.set(slug, 0);
+      sourceNames.push(slug);
+    }
 
-    const src = getSourceName(cleanUrl) || defaultSource || 'News';
-    const item = {
-      url: cleanUrl,
-      source: src,
-      status: 'unopened',
-      addedAt: new Date().toISOString()
-    };
-
-    queue.push(item);
-    urlToItemMap.set(norm, item);
-    urlToItemMap.set(cleanUrl, item);
-    addToSourceQueue(item);
-    unopenedCount++;
+    const qList = sourceQueues.get(slug);
+    qList.push(cleanUrl);
+    enqueuedUrls.add(norm);
+    enqueuedUrls.add(cleanUrl);
+    totalPendingCount++;
     addedCount++;
+
+    // Cap at MAX_QUEUE_PER_SOURCE to prevent bloated files
+    if (qList.length > MAX_QUEUE_PER_SOURCE) {
+      const droppedUrl = qList.shift();
+      enqueuedUrls.delete(normalizeUrl(droppedUrl));
+      enqueuedUrls.delete(droppedUrl);
+      totalPendingCount--;
+    }
   }
 
   if (addedCount > 0) {
@@ -374,34 +367,35 @@ function enqueueLinks(urls, defaultSource = null) {
 }
 
 /**
- * O(1) Round-Robin Dispatcher:
- * Cycles through all 12 news sources so parallel workers never hit
- * a single website concurrently or get throttled!
+ * O(1) Round-Robin Dispatcher across 13 news networks
  */
 function getNextUnopened() {
-  if (unopenedCount === 0 || sourceNames.length === 0) return null;
+  if (totalPendingCount === 0 || sourceNames.length === 0) return null;
 
   const total = sourceNames.length;
   for (let i = 0; i < total; i++) {
-    sourceIndex = (sourceIndex + 1) % total;
-    const src = sourceNames[sourceIndex];
-    const qList = sourceQueues.get(src);
-    let ptr = sourcePointers.get(src) || 0;
+    currentSourceIndex = (currentSourceIndex + 1) % total;
+    const slug = sourceNames[currentSourceIndex];
+    const qList = sourceQueues.get(slug);
+    let ptr = sourcePointers.get(slug) || 0;
 
     while (qList && ptr < qList.length) {
-      const item = qList[ptr++];
-      sourcePointers.set(src, ptr);
-      if (item && item.status === 'unopened') {
-        return item;
+      const url = qList[ptr++];
+      sourcePointers.set(slug, ptr);
+      const norm = normalizeUrl(url);
+      if (!scrapedHistory.has(norm) && !scrapedHistory.has(url)) {
+        return {
+          url,
+          source: slug.replace(/_/g, ' '),
+          sourceSlug: slug,
+          status: 'unopened'
+        };
       }
     }
   }
   return null;
 }
 
-/**
- * Get unopened links from queue in O(1) time
- */
 function getUnopenedLinks(limit = 100) {
   const result = [];
   for (let i = 0; i < limit; i++) {
@@ -429,50 +423,42 @@ function recordInHistory(url) {
 }
 
 /**
- * Mark a link as 'opened' (Idempotent O(1))
+ * Mark a link as 'opened': Records in history and evicts from partitioned queue
  */
 function markLinkOpened(url, metadata = {}) {
   const norm = normalizeUrl(url);
-  let item = urlToItemMap.get(norm) || urlToItemMap.get(url);
+  recordInHistory(url);
+  recordInHistory(norm);
+  enqueuedUrls.delete(norm);
+  enqueuedUrls.delete(url);
 
-  if (!item) {
-    item = {
-      url: url,
-      source: getSourceName(url),
-      status: 'opened',
-      addedAt: new Date().toISOString(),
-      openedAt: new Date().toISOString(),
-      ...metadata
-    };
-    queue.push(item);
-    urlToItemMap.set(norm, item);
-    urlToItemMap.set(url, item);
-    openedCount++;
-  } else {
-    if (item.status === 'unopened') {
-      item.status = 'opened';
-      unopenedCount = Math.max(0, unopenedCount - 1);
-      openedCount++;
+  // Evict from corresponding source queue if present
+  const slug = getCanonicalSource(metadata.source, url);
+  if (sourceQueues.has(slug)) {
+    const qList = sourceQueues.get(slug);
+    const idx = qList.findIndex(u => normalizeUrl(u) === norm || u === url);
+    if (idx !== -1) {
+      qList.splice(idx, 1);
+      totalPendingCount = Math.max(0, totalPendingCount - 1);
+      scheduleSave();
     }
-    item.openedAt = new Date().toISOString();
-    Object.assign(item, metadata);
   }
 
-  // Record in history.txt
-  recordInHistory(norm);
-
-  scheduleSave();
-  return item;
+  return { url, status: 'opened', ...metadata };
 }
 
 /**
- * O(1) Instant Queue Statistics
+ * Instant Queue Statistics
  */
 function getQueueStats() {
+  const perSource = {};
+  for (const [slug, list] of sourceQueues.entries()) {
+    perSource[slug] = list.length;
+  }
   return {
-    total: queue.length,
-    unopened: unopenedCount,
-    opened: openedCount
+    totalPending: totalPendingCount,
+    totalHistory: scrapedHistory.size,
+    sources: perSource
   };
 }
 
@@ -487,6 +473,7 @@ module.exports = {
   normalizeUrl,
   isRealStory,
   getSourceName,
+  getCanonicalSource,
   isSameOrSupportedNetwork,
   isScraped,
   recordInHistory,
@@ -519,49 +506,28 @@ if (require.main === module) {
 
   const stats = getQueueStats();
   console.log(`\n==========================================================`);
-  console.log(`🎯 MASTER QUEUE MANAGER DASHBOARD (Status: 🟢 HEALTHY)`);
+  console.log(`🎯 MASTER MULTI-FILE QUEUE REGISTRY (Status: 🟢 HEALTHY)`);
   console.log(`==========================================================`);
-  console.log(`📊 Queue Overview:`);
-  console.log(`   📁 Total URLs in Queue  : ${stats.total.toLocaleString()}`);
-  console.log(`   ⏳ Unopened (Pending)   : ${stats.unopened.toLocaleString()} articles`);
-  console.log(`   ✅ Opened (Completed)   : ${stats.opened.toLocaleString()} articles`);
-  console.log(`   📜 Scraped History      : ${scrapedHistory.size.toLocaleString()} URLs`);
+  console.log(`📊 Global Summary:`);
+  console.log(`   ⏳ Total Active Pending : ${stats.totalPending.toLocaleString()} URLs`);
+  console.log(`   📜 Scraped History URLs  : ${stats.totalHistory.toLocaleString()} URLs`);
+  console.log(`   📁 Partitioned Files     : ${Object.keys(stats.sources).length} news network files`);
   console.log(`----------------------------------------------------------`);
-  console.log(`🌐 Pending Articles Distribution by News Publication:`);
+  console.log(`🌐 Partitioned Queue Files (queues/*.json):`);
 
-  const unopenedBySource = {};
-  for (const item of queue) {
-    if (item.status === 'unopened') {
-      const s = item.source || 'News';
-      unopenedBySource[s] = (unopenedBySource[s] || 0) + 1;
+  const sorted = Object.entries(stats.sources).sort((a, b) => b[1] - a[1]);
+  for (const [slug, count] of sorted) {
+    const qFile = path.join(queuesDir, `${slug}.json`);
+    let fSize = '0 KB';
+    if (fs.existsSync(qFile)) {
+      fSize = `${(fs.statSync(qFile).size / 1024).toFixed(1)} KB`;
     }
-  }
-
-  const sorted = Object.entries(unopenedBySource).sort((a, b) => b[1] - a[1]);
-  for (const [src, count] of sorted) {
-    console.log(`   ⚡ ${src.padEnd(26)}: ${count.toLocaleString()} pending`);
+    console.log(`   ⚡ ${slug.padEnd(24)}: ${String(count).padStart(4)} pending  (${fSize})`);
   }
 
   console.log(`----------------------------------------------------------`);
-  console.log(`🔎 Sample Next 3 URLs in Dispatch Queue:`);
-  const samplePointers = new Map(sourcePointers);
-  let sampleCount = 0;
-  for (const src of sourceNames) {
-    const list = sourceQueues.get(src) || [];
-    for (const item of list) {
-      if (item.status === 'unopened') {
-        console.log(`   [${sampleCount + 1}] [${item.source}] ${item.url}`);
-        sampleCount++;
-        break;
-      }
-    }
-    if (sampleCount >= 3) break;
-  }
-
-  console.log(`----------------------------------------------------------`);
-  console.log(`💡 How to run:`);
-  console.log(`   • Test a URL filter:        node queue_manager.js --test <url>`);
-  console.log(`   • Run Fast Scraper:         node queue_worker.js --concurrency 24`);
-  console.log(`   • Run Continuous Harvester: node ref.js --concurrency 16`);
+  console.log(`💡 Usage:`);
+  console.log(`   • Test a link:    node queue_manager.js --test <url>`);
+  console.log(`   • Run Scraper:    node queue_worker.js --concurrency 24`);
   console.log(`==========================================================\n`);
 }
