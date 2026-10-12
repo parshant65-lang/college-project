@@ -1,0 +1,31 @@
+name: Continuous College News Scraper Engine
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Autonomous backup cron every 6 hours
+    - cron: '0 */6 * * *'
+
+jobs:
+  scrape-and-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout Scraper Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Execute Autonomous Fast Scraper (24 Streams)
+        env:
+          VAULT_PAT: ${{ secrets.VAULT_PAT }}
+        run: |
+          node --max-http-header-size=150000 queue_worker.js --concurrency 24

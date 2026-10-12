@@ -2,3 +2,9 @@ node_modules/
 .DS_Store
 *.log
 *.zip
+vault_*
+venv/
+Data/
+history.txt
+links_queue.json
+.env

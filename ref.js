@@ -1,11 +1,31 @@
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 const cheerio = require('cheerio');
+const queueManager = require('./queue_manager');
 
 // Ensure 'Data' directory exists
 const dataDir = path.join(__dirname, 'Data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
+}
+
+// High-Performance Reusable HTTPS Connection Pool
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 64,
+  maxFreeSockets: 32,
+  timeout: 8000
+});
+
+// Throttled non-blocking preview writer
+let lastLatestWrite = 0;
+function updateLatestJson(data) {
+  const now = Date.now();
+  if (now - lastLatestWrite > 1000) {
+    lastLatestWrite = now;
+    fs.promises.writeFile(path.join(dataDir, 'latest.json'), JSON.stringify(data, null, 2), 'utf8').catch(() => {});
+  }
 }
 
 // Master History Registry: remembers all scraped URLs forever
@@ -19,13 +39,16 @@ const scrapedHistory = new Set();
 function normalizeUrl(rawUrl) {
   try {
     const u = new URL(rawUrl);
+    u.protocol = 'https:'; // Unify http and https so we never have duplicate URLs
     u.hash = '';
     u.search = '';
     let clean = u.href;
     if (clean.endsWith('/')) clean = clean.slice(0, -1);
     return clean;
   } catch (e) {
-    return (rawUrl || '').trim();
+    let s = (rawUrl || '').trim();
+    if (s.endsWith('/')) s = s.slice(0, -1);
+    return s;
   }
 }
 
@@ -45,7 +68,7 @@ function recordInHistory(url) {
   if (!scrapedHistory.has(clean)) {
     scrapedHistory.add(clean);
     scrapedHistory.add(url);
-    fs.appendFileSync(historyFile, clean + '\n');
+    queueManager.recordInHistory(clean);
   }
 }
 
@@ -72,28 +95,126 @@ const ignorePhrases = [
   'sign in to continue',
   'download the app',
   'follow us on',
-  'to continue, please click the box below'
+  'to continue, please click the box below',
+  'etprime',
+  'et prime',
+  'unlock all',
+  'login using your',
+  'pdf version',
+  'choose your reason below',
+  'stock queries',
+  'manage your money',
+  'read your daily newspaper',
+  'whatsapp channel',
+  'for reprint rights',
+  'exclusive story from new york times'
 ];
 
 /**
- * Exact story URL validator across all 10 major networks
- * Rejects non-news utilities, players, login pages, and ads
+ * Strict Financial & Business Story URL Validator:
+ * Rejects non-news utilities, calculators, author profiles, topic tags, video players, games,
+ * and ALL non-financial topics (crimes, murder, sports, cinema, astrology, gossip).
  */
 function isRealStory(url) {
   try {
     const u = new URL(url);
-    const p = u.pathname.toLowerCase();
-    if (p.includes('/players/') || p.includes('/teams/') || p.includes('/scores/') || p.includes('/series/') || p.includes('/stats/')) return false;
-    if (p.includes('/logout') || p.includes('/login') || p.includes('/about') || p.includes('/contact') || p.includes('/terms') || p.includes('/privacy') || p.includes('/ht-img/')) return false;
+    const host = u.hostname.toLowerCase();
+    let p = u.pathname.toLowerCase();
+    if (p.endsWith('/')) p = p.slice(0, -1);
 
-    if (p.endsWith('.html') && /-\d{8,}\.html$/.test(p)) return true; // Hindustan Times, LiveMint
-    if (p.endsWith('.ece') && /article\d+\.ece$/.test(p)) return true; // The Hindu
-    if (p.includes('/articleshow/') && p.endsWith('.cms')) return true; // Times of India
-    if (p.includes('/story/') && /-\d{5,}/.test(p)) return true; // Aaj Tak & India Today
-    if (/\/articles\/c[a-z0-9]+/i.test(p)) return true; // BBC News
-    if (/\/news\/articles\/\d{4}-/i.test(p)) return true; // Bloomberg
-    if (/\/article\/.*-\d{6,}\/?$/i.test(p)) return true; // Indian Express
-    if (/-\d{7,}\/?$/i.test(p)) return true; // NDTV
+    // 1. General utility, tools, calculators, and non-article page blacklist
+    const utilityBlacklist = [
+      '/author/', '/authors/', '/profile/', '/topic/', '/topics/', '/tag/', '/tags/',
+      '/photos/', '/photo-gallery/', '/photogallery/', '/picture-gallery/',
+      '/videos/', '/video/', '/web-stories/', '/webstories/', '/visual-stories/',
+      '/live-blog/', '/liveblog/', '/games/', '/crossword/', '/sudoku/',
+      '/horoscope/', '/astrology/', '/podcasts/', '/podcast/',
+      'newsletter', '/epaper/', '/brand-stories/', '/native/',
+      '/players/', '/teams/', '/scores/', '/series/', '/stats/',
+      '/calculator', '/calculators/', '/tools/', '/performance-tracker',
+      '/fixed-income/calculator', '/logout', '/login', '/about', '/contact', '/terms', '/privacy', '/ht-img/'
+    ];
+    if (utilityBlacklist.some(b => p.includes(b))) return false;
+
+    // 2. Topic Blacklist: Strictly reject crime, murder, sports, cinema, and lifestyle
+    const nonFinancialBlacklist = [
+      '/sports/', '/sport/', '/cricket/', '/football/', '/tennis/', '/hockey/', '/badminton/',
+      '/olympics/', '/entertainment/', '/bollywood/', '/hollywood/', '/cinema/', '/movie',
+      '/lifestyle/', '/fashion/', '/relationships/', '/horoscope/', '/astrology/', '/zodiac/',
+      '/religion/', '/dharm/', '/crime/', '/murder/', '/rape/', '/accident/', '/suicide/',
+      '/police/', '/city/', '/cities/', '/viral/', '/offbeat/', '/delhi-news/', '/mumbai-news/',
+      '/noida-news/', '/bengaluru-news/', '/kolkata-news/', '/chennai-news/', '/hyderabad-news/',
+      '/elections/', '/politics/'
+    ];
+    if (nonFinancialBlacklist.some(b => p.includes(b))) return false;
+
+    // 3. Dedicated Financial Portals: 100% focused on business & economy
+    const dedicatedFinancialDomains = [
+      'economictimes.indiatimes.com',
+      'livemint.com',
+      'bloomberg.com',
+      'yahoo.com',
+      'moneycontrol.com',
+      'business-standard.com',
+      'ndtvprofit.com',
+      'financialexpress.com'
+    ];
+
+    const isDedicated = dedicatedFinancialDomains.some(d => host.endsWith(d));
+
+    // 4. LiveMint: Strictly enforce business sections (filter out general /news/india/ and /news/world/ crime/politics)
+    if (host.includes('livemint')) {
+      const liveMintBizSections = ['/market', '/companies', '/money', '/industry', '/economy', '/budget', '/mutual-funds', '/banking', '/technology', '/opinion', '/business'];
+      const hasBizSection = liveMintBizSections.some(sec => p.includes(sec));
+      if (!hasBizSection) return false;
+      if (p.endsWith('.html') && /-\d{8,}\.html$/.test(p)) return true;
+      return false;
+    }
+
+    // 5. If from a general news network, REQUIRE business / economy / markets section
+    if (!isDedicated) {
+      const allowedSections = ['/business', '/economy', '/market', '/markets', '/industry', '/money', '/finance', '/profit', '/stocks', '/banking', '/tech'];
+      const hasBizSection = allowedSections.some(sec => p.includes(sec));
+      if (!hasBizSection) return false;
+    }
+
+    // 6. Validate article structure pattern for each publication
+    // Hindustan Times
+    if (p.endsWith('.html') && /-\d{8,}\.html$/.test(p)) return true;
+
+    // Moneycontrol: genuine news & market reports with story ID
+    if (host.includes('moneycontrol') && (p.includes('/news/') || p.includes('/market/')) && /[-_]\d{5,}\.html$/.test(p)) return true;
+
+    // Business Standard: dedicated financial publication (all article IDs)
+    if (host.includes('business-standard') && /-\d+(_\d+)?\.html$/.test(p)) return true;
+
+    // Financial Express: dedicated financial publication
+    if (host.includes('financialexpress') && (/-\d+\/?$/.test(p) || /-\d+\.html$/.test(p))) return true;
+
+    // The Hindu
+    if (p.endsWith('.ece') && /article\d+\.ece$/.test(p)) return true;
+
+    // Times of India, The Economic Times
+    if (p.includes('/articleshow/') && p.endsWith('.cms')) return true;
+
+    // Aaj Tak & India Today
+    if ((p.includes('/story/') || p.includes('/trending/') || p.includes('/national/')) && /-\d{5,}/.test(p)) return true;
+
+    // BBC News (both modern /articles/c... and classic 8-digit)
+    if (/\/articles\/c[a-z0-9]{8,}/i.test(p) || (host.includes('bbc.') && /-\d{7,8}$/.test(p))) return true;
+
+    // Bloomberg News (both /news/ and /opinion/)
+    if (/\/(news|opinion)\/articles\/\d{4}-\d{2}-\d{2}\//i.test(p)) return true;
+
+    // Indian Express
+    if (/\/article\/.*-\d{6,}$/i.test(p)) return true;
+
+    // NDTV / NDTV Profit
+    if (host.includes('ndtv') && /-\d{6,}$/.test(p)) return true;
+
+    // Yahoo Finance
+    if (host.includes('yahoo.com') && (p.includes('/articles/') || p.includes('/article/') || p.includes('/news/')) && p.endsWith('.html')) return true;
+
     return false;
   } catch(e) {
     return false;
@@ -106,19 +227,64 @@ function isRealStory(url) {
 function getSourceName(url) {
   try {
     const host = new URL(url).hostname.toLowerCase();
-    if (host.includes('bloomberg')) return 'Bloomberg News';
-    if (host.includes('thehindu')) return 'The Hindu';
-    if (host.includes('indianexpress')) return 'Indian Express';
-    if (host.includes('hindustantimes')) return 'Hindustan Times';
-    if (host.includes('ndtv')) return 'NDTV';
-    if (host.includes('indiatoday')) return 'India Today';
-    if (host.includes('bbc')) return 'BBC News';
+    if (host.includes('economictimes')) return 'The Economic Times';
     if (host.includes('livemint')) return 'LiveMint';
-    if (host.includes('timesofindia') || host.includes('indiatimes')) return 'Times of India';
-    if (host.includes('aajtak')) return 'Aaj Tak';
+    if (host.includes('moneycontrol')) return 'Moneycontrol';
+    if (host.includes('business-standard')) return 'Business Standard';
+    if (host.includes('bloomberg')) return 'Bloomberg News';
+    if (host.includes('yahoo.com')) return 'Yahoo Finance';
+    if (host.includes('ndtvprofit') || host.includes('ndtv')) return 'NDTV Profit';
+    if (host.includes('thehindu')) return 'The Hindu Business';
+    if (host.includes('indianexpress')) return 'Indian Express Business';
+    if (host.includes('hindustantimes')) return 'Hindustan Times Business';
+    if (host.includes('timesofindia') || host.includes('indiatimes')) return 'Times of India Business';
+    if (host.includes('bbc')) return 'BBC Business';
+    if (host.includes('aajtak')) return 'Aaj Tak Business';
+    if (host.includes('indiatoday')) return 'India Today Business';
     return host.replace('www.', '').split('.')[0].toUpperCase();
   } catch (e) {
-    return 'News';
+    return 'Finance';
+  }
+}
+
+/**
+ * Check whether a target URL belongs to the same publication apex domain
+ * or any of the supported financial news networks
+ */
+function isSameOrSupportedNetwork(targetUrl, currentUrl) {
+  try {
+    const tHost = new URL(targetUrl).hostname.toLowerCase();
+    const cHost = new URL(currentUrl).hostname.toLowerCase();
+
+    const getApex = (h) => {
+      const parts = h.split('.');
+      if (parts.length >= 2) {
+        if (parts.length >= 3 && (parts[parts.length - 2] === 'co' || parts[parts.length - 2] === 'com' || parts[parts.length - 2] === 'org')) {
+          return parts.slice(-3).join('.');
+        }
+        return parts.slice(-2).join('.');
+      }
+      return h;
+    };
+
+    const tApex = getApex(tHost);
+    const cApex = getApex(cHost);
+
+    if (tApex === cApex || tHost.includes(cApex) || cHost.includes(tApex)) {
+      return true;
+    }
+
+    const supported = [
+      'economictimes.indiatimes.com', 'livemint.com', 'bloomberg.com',
+      'moneycontrol.com', 'business-standard.com', 'financialexpress.com',
+      'ndtvprofit.com', 'yahoo.com', 'thehindu.com', 'indianexpress.com',
+      'hindustantimes.com', 'ndtv.com', 'indiatoday.in', 'bbc.com',
+      'bbc.co.uk', 'timesofindia.indiatimes.com', 'aajtak.in'
+    ];
+
+    return supported.some(d => tHost.endsWith(d));
+  } catch (e) {
+    return false;
   }
 }
 
@@ -126,10 +292,10 @@ function getSourceName(url) {
  * 1. Universal Article Scraper
  * Extracts clean, ad-free article from ANY news website (including Bloomberg)!
  */
-async function scrapeSingleArticle(articleUrl, targetFolder = null) {
+async function scrapeSingleArticle(articleUrl, targetFolder = null, force = false) {
   try {
     // 0. Instant History Check: Skip immediately if already in master history registry
-    if (scrapedHistory.has(articleUrl)) {
+    if (!force && (scrapedHistory.has(articleUrl) || scrapedHistory.has(normalizeUrl(articleUrl)))) {
       return { status: 'skipped', heading: 'Already in history registry', filename: '' };
     }
 
@@ -141,19 +307,43 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
     let date = '';
     let paragraphs = [];
 
-    // Attempt web fetch with full browser emulation headers
+    // Attempt web fetch with full browser emulation headers (6s timeout)
     let html = '';
     try {
       const res = await fetch(articleUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
-        }
+        },
+        signal: AbortSignal.timeout(6000)
       });
       if (res.ok) {
         html = await res.text();
       }
-    } catch (e) {}
+    } catch (e) {
+      // Fast Fallback with pooled agent & maxHeaderSize (e.g. Yahoo Finance oversized headers)
+      try {
+        html = await new Promise((resolve) => {
+          const req = https.get(articleUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'text/html'
+            },
+            agent: httpsAgent,
+            maxHeaderSize: 150000
+          }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve(data));
+          });
+          req.setTimeout(6000, () => {
+            req.destroy();
+            resolve('');
+          });
+          req.on('error', () => resolve(''));
+        });
+      } catch(err2) {}
+    }
 
     // Check if we hit a genuine bot-block or empty HTML (e.g. Bloomberg 403 / captcha)
     const isBlocked = !html || html.length < 500 || html.includes('please click the box below') || html.includes('captcha-delivery');
@@ -182,18 +372,59 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
       date = $('meta[property="article:published_time"]').attr('content') || 
              $('time').first().text().trim() || '';
 
-      // 1. Primary: Extract all genuine story <p> tags across the page
-      $('p').each((_, el) => {
-        const text = $(el).text().replace(/\s+/g, ' ').trim();
-        const lower = text.toLowerCase();
-        const shouldIgnore = ignorePhrases.some(phrase => lower.includes(phrase));
+      // 1. Primary for The Economic Times (.artText clean extraction)
+      if (articleUrl.includes('economictimes')) {
+        $('.artText').each((_, el) => {
+          if (paragraphs.length > 0) return;
+          const clone = $(el).clone();
+          clone.find('script, style, noscript, .hidden, #sr_widget, #stock_pro, .clearfix, .report_error, div, .etprime_widget').remove();
+          clone.find('br').replaceWith('\n');
+          const lines = clone.text().split('\n')
+            .map(s => s.replace(/\s+/g, ' ').trim())
+            .filter(s => s.length > 45 && !ignorePhrases.some(ph => s.toLowerCase().includes(ph)));
+          if (lines.length >= 2) paragraphs = lines;
+        });
+      }
 
-        if (text.length > 45 && !shouldIgnore) {
-          paragraphs.push(text);
-        }
-      });
+      // 2. Primary for Times of India custom article containers
+      if (paragraphs.length < 2 && (articleUrl.includes('timesofindia') || articleUrl.includes('indiatimes'))) {
+        $('div._s30J, div.ihgno, div.article_content').each((_, el) => {
+          if (paragraphs.length > 0) return;
+          const clone = $(el).clone();
+          clone.find('script, style, noscript, .hidden, div').remove();
+          clone.find('br').replaceWith('\n');
+          const lines = clone.text().split(/\n+|\.\s+(?=[A-Z])/)
+            .map(s => s.replace(/\s+/g, ' ').trim())
+            .filter(s => s.length > 45 && !ignorePhrases.some(ph => s.toLowerCase().includes(ph)));
+          if (lines.length >= 2) paragraphs = lines;
+        });
+      }
 
-      // 2. Secondary: If <p> tags gave very few paras (common on Times of India / custom CMS), check JSON-LD
+      // 3. Primary for Yahoo Finance (div.caas-body, div.body)
+      if (paragraphs.length < 2 && articleUrl.includes('yahoo.com')) {
+        $('div.caas-body, div.body, article').find('p').each((_, el) => {
+          const text = $(el).text().replace(/\s+/g, ' ').trim();
+          if (text.length > 40 && !ignorePhrases.some(ph => text.toLowerCase().includes(ph))) {
+            paragraphs.push(text);
+          }
+        });
+      }
+
+      // 4. Targeted Containers for Hindu, Express, HT, NDTV, BBC, Mint, etc.
+      if (paragraphs.length < 2) {
+        const container = $('div.articlebodycontent, div#pcl-full-content, div.story-details, div.storyDetails, div.story-body, div.ins_storybody, div.mainArea, article, main').first();
+        const scope = container.length > 0 ? container : $('body');
+        scope.find('p').each((_, el) => {
+          const text = $(el).text().replace(/\s+/g, ' ').trim();
+          const lower = text.toLowerCase();
+          const shouldIgnore = ignorePhrases.some(phrase => lower.includes(phrase));
+          if (text.length > 45 && !shouldIgnore) {
+            paragraphs.push(text);
+          }
+        });
+      }
+
+      // 4. Secondary: Check JSON-LD articleBody if available
       if (paragraphs.length < 2) {
         $('script[type="application/ld+json"]').each((_, el) => {
           if (paragraphs.length >= 2) return;
@@ -208,16 +439,18 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
             }
           } catch(e) {}
         });
+      }
 
-        // 3. Check custom story containers (like TOI div._s30J, div.ihgno)
-        if (paragraphs.length < 2) {
-          const customDiv = $('div._s30J, div.ihgno, div.article_content, div.story-text');
-          if (customDiv.length > 0) {
-            const text = customDiv.text().replace(/\s+/g, ' ').trim();
-            const split = text.split(/\.\s+(?=[A-Z])/).map(s => s.trim() + '.').filter(s => s.length > 45 && !s.toLowerCase().includes('download the'));
-            if (split.length > paragraphs.length) paragraphs = split;
+      // 5. Fallback: Page-wide <p> tags
+      if (paragraphs.length < 2) {
+        $('p').each((_, el) => {
+          const text = $(el).text().replace(/\s+/g, ' ').trim();
+          const lower = text.toLowerCase();
+          const shouldIgnore = ignorePhrases.some(phrase => lower.includes(phrase));
+          if (text.length > 45 && !shouldIgnore) {
+            paragraphs.push(text);
           }
-        }
+        });
       }
     }
 
@@ -239,24 +472,50 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
     // In-page Related News & Suggestion Link Discovery (Web Spidering)
     const discoveredLinks = [];
     if (!isBlocked && $) {
+      const discoveredSet = new Set();
+
+      // 1. High-Priority: Links inside Article Body and Related/Recommendation blocks
+      const priorityContainers = $(
+        'div.artText, div._s30J, div.story-details, div.storyDetails, div.articlebodycontent, ' +
+        'div.ins_storybody, div.caas-body, div.article_wrapper, div.article_consum_wrapper, ' +
+        'div.bigstory, div.storyBox, div.storyContent, div[class*="related"], div[class*="recommend"], ' +
+        'div[class*="also-read"], div[class*="more-news"], div[class*="read-next"], article'
+      );
+
+      priorityContainers.find('a[href]').each((_, el) => {
+        try {
+          const rawHref = $(el).attr('href');
+          if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('javascript:')) return;
+
+          const absUrl = new URL(rawHref, articleUrl).href;
+          const clean = normalizeUrl(absUrl);
+          if (clean && isSameOrSupportedNetwork(clean, articleUrl) && isRealStory(clean)) {
+            if (!scrapedHistory.has(clean) && !scrapedHistory.has(absUrl)) {
+              discoveredSet.add(clean);
+            }
+          }
+        } catch (e) {}
+      });
+
+      // 2. Secondary: Across page for any additional real story links
       $('a[href]').each((_, el) => {
         try {
           const rawHref = $(el).attr('href');
           if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('javascript:')) return;
 
-          const absUrl = new URL(rawHref, articleUrl).href.split('?')[0].split('#')[0];
-          const host = new URL(absUrl).hostname.toLowerCase();
-          const baseHost = new URL(articleUrl).hostname.toLowerCase();
-
-          // Keep within the same news organization domain
-          if (host.includes(baseHost.replace('www.', '')) || baseHost.includes(host.replace('www.', ''))) {
-            const clean = normalizeUrl(absUrl);
-            if (isRealStory(absUrl) && !scrapedHistory.has(clean) && !scrapedHistory.has(absUrl)) {
-              discoveredLinks.push(absUrl);
+          const absUrl = new URL(rawHref, articleUrl).href;
+          const clean = normalizeUrl(absUrl);
+          if (clean && isSameOrSupportedNetwork(clean, articleUrl) && isRealStory(clean)) {
+            if (!scrapedHistory.has(clean) && !scrapedHistory.has(absUrl)) {
+              discoveredSet.add(clean);
             }
           }
         } catch (e) {}
       });
+
+      for (const link of discoveredSet) {
+        discoveredLinks.push(link);
+      }
     }
 
     // Clean up heading
@@ -266,6 +525,42 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
       .trim();
 
     if (!heading || heading.length < 5 || paragraphs.length === 0) return null;
+
+    // Strict Financial Relevance Guard:
+    // Drop murder, crime, rape, accidents, sports, and gossip that lack financial/economic context
+    const headingLower = heading.toLowerCase();
+    const categoryLower = (category || '').toLowerCase();
+    const textSample = (heading + ' ' + paragraphs.slice(0, 3).join(' ')).toLowerCase();
+
+    // 1. ABSOLUTE ZERO TOLERANCE: Any headline/category mentioning violence, crime, murder, sports or gossip is discarded!
+    const strictlyForbiddenInTitle = [
+      'murder', 'stabbed', 'knife', 'dead body', 'dead-body', 'dead bodies', 'rape', 'gangrape', 'gang-rape',
+      'suicide', 'hanged', 'shot dead', 'bullets', 'pistol', 'encounter', 'terrorist', 'terrorists', 'kidnap',
+      'kidnapped', 'lynched', 'bomber', 'bomb blast', 'accused of murder', 'convicted of rape',
+      'cricket', 'wicket', 'batsman', 'bowler', 'ipl', 'test match', 'odi match', 'world cup winner',
+      'fifa', 'football match', 'tennis', 'us open', 'wimbledon', 'badminton', 'hockey', 'olympics',
+      'premier league', 'tournament', 'bollywood', 'hollywood', 'dating rumors', 'bikini', 'divorce',
+      'box office', 'box-office', 'movie review', 'film review', 'actor', 'actress', 'star cast',
+      'horoscope', 'astrology', 'zodiac', 'rashifal', 'kundali'
+    ];
+
+    if (strictlyForbiddenInTitle.some(w => headingLower.includes(w) || categoryLower.includes(w))) {
+      return null; // Silently reject non-financial crime / sports / gossip content
+    }
+
+    // 2. Body sample check: If body mentions brutal crime/sports without solid financial indicators, reject!
+    const crimeWords = ['murder', 'gang-rape', 'stabbed to death', 'dead body was found', 'hanged from', 'shot dead'];
+    const solidFinancialKeywords = [
+      'stock', 'market', 'share', 'shares', 'sensex', 'nifty', 'rupee', 'dollar', 'gdp',
+      'inflation', 'rbi', 'fed', 'economy', 'economic', 'profit', 'revenue', 'loss', 'ipo',
+      'banking', 'mutual fund', 'investment', 'investor', 'tax', 'gst', 'finance', 'financial',
+      'wealth', 'sebi', 'trillion', 'billion', 'crore', 'lakh', 'tariffs', 'export', 'import',
+      'corporate', 'earnings', 'merger', 'acquisition', 'dividend'
+    ];
+
+    if (crimeWords.some(w => textSample.includes(w)) && !solidFinancialKeywords.some(w => textSample.includes(w))) {
+      return null;
+    }
 
     // Fallback category from URL pathname
     if (!category) {
@@ -290,6 +585,23 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
       .replace(/^_+|_+$/g, '')
       .slice(0, 50);
 
+    // Fallback to URL pathname slug if heading has non-latin characters (e.g. Hindi / Aaj Tak)
+    if (safeHeading.length < 3) {
+      try {
+        const urlObj = new URL(articleUrl);
+        const parts = urlObj.pathname.split('/').filter(Boolean);
+        const lastPart = parts[parts.length - 1] || parts[parts.length - 2] || '';
+        safeHeading = lastPart
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, '')
+          .slice(0, 50);
+      } catch(e) {}
+    }
+    if (!safeHeading || safeHeading.length < 2) {
+      safeHeading = 'story_' + Math.abs(articleUrl.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)).toString(36);
+    }
+
     const safeFilename = `${sourceSlug}_${safeHeading}`;
 
     // Target save directory with Date & Time (e.g. Data/2026-09-22/Run_12-00AM/)
@@ -313,6 +625,10 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
     // If already downloaded previously, skip quickly!
     if (fs.existsSync(jsonFilePath)) {
       recordInHistory(articleUrl);
+      queueManager.markLinkOpened(articleUrl, { heading, source });
+      if (discoveredLinks && discoveredLinks.length > 0) {
+        queueManager.enqueueLinks(discoveredLinks, source);
+      }
       return { status: 'skipped', heading, filename: safeFilename, discoveredLinks };
     }
 
@@ -329,32 +645,88 @@ async function scrapeSingleArticle(articleUrl, targetFolder = null) {
       paragraphs
     };
 
-    fs.writeFileSync(jsonFilePath, JSON.stringify(articleData, null, 2));
+    // Asynchronously save article without blocking the event loop
+    await fs.promises.writeFile(jsonFilePath, JSON.stringify(articleData, null, 2), 'utf8');
 
-    // Update latest.json for quick preview
-    fs.writeFileSync(path.join(dataDir, 'latest.json'), JSON.stringify(articleData, null, 2));
+    // Throttled preview update
+    updateLatestJson(articleData);
 
     // Record URL in master history registry
     recordInHistory(articleUrl);
 
-    return { status: 'saved', source, heading, category, photo, paragraphsCount: paragraphs.length, filename: safeFilename, discoveredLinks };
+    // Update persistent queue: mark opened & enqueue discovered suggestion links
+    queueManager.markLinkOpened(articleUrl, { heading, source });
+    let queuedNewCount = 0;
+    if (discoveredLinks && discoveredLinks.length > 0) {
+      queuedNewCount = queueManager.enqueueLinks(discoveredLinks, source);
+    }
+
+    return { status: 'saved', source, heading, category, photo, paragraphsCount: paragraphs.length, filename: safeFilename, discoveredLinks, queuedNewCount };
   } catch (err) {
     return null;
   }
 }
 
 /**
- * 2. MASTER MULTI-SOURCE REGISTRY
- * All Major Global & Indian News Networks
+ * 2. MASTER FINANCIAL & BUSINESS NEWS REGISTRY
+ * 100% Focused on Economy, Markets, Corporate, Finance & Technology
  */
 const NEWS_SOURCES = [
+  {
+    name: 'The Economic Times',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://economictimes.indiatimes.com/rssfeedstopstories.cms', category: 'Top Business' },
+      { url: 'https://economictimes.indiatimes.com/news/rssfeeds/1715249553.cms', category: 'Economy' },
+      { url: 'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms', category: 'Markets' },
+      { url: 'https://economictimes.indiatimes.com/markets/stocks/rssfeeds/2146842.cms', category: 'Stocks' },
+      { url: 'https://economictimes.indiatimes.com/markets/ipos/rssfeeds/10774780.cms', category: 'IPOs' },
+      { url: 'https://economictimes.indiatimes.com/industry/rssfeeds/13352306.cms', category: 'Industry' },
+      { url: 'https://economictimes.indiatimes.com/wealth/rssfeeds/837555174.cms', category: 'Wealth' },
+      { url: 'https://economictimes.indiatimes.com/tech/rssfeeds/13357270.cms', category: 'Technology' }
+    ]
+  },
+  {
+    name: 'LiveMint',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://www.livemint.com/rss/markets', category: 'Markets' },
+      { url: 'https://www.livemint.com/rss/companies', category: 'Companies' },
+      { url: 'https://www.livemint.com/rss/money', category: 'Personal Finance' },
+      { url: 'https://www.livemint.com/rss/industry', category: 'Industry' },
+      { url: 'https://www.livemint.com/rss/economy', category: 'Economy' },
+      { url: 'https://www.livemint.com/rss/technology', category: 'Technology' },
+      { url: 'https://www.livemint.com/rss/budget', category: 'Budget' },
+      { url: 'https://www.livemint.com/rss/mutual-funds', category: 'Mutual Funds' }
+    ]
+  },
+  {
+    name: 'Moneycontrol',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://www.moneycontrol.com/rss/MCtopnews.xml', category: 'Top Market News' },
+      { url: 'https://www.moneycontrol.com/rss/business.xml', category: 'Business' },
+      { url: 'https://www.moneycontrol.com/rss/economy.xml', category: 'Economy' },
+      { url: 'https://www.moneycontrol.com/rss/marketreports.xml', category: 'Market Reports' }
+    ]
+  },
+  {
+    name: 'Business Standard',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://www.business-standard.com/rss/home_page_top_stories.rss', category: 'Top Finance' },
+      { url: 'https://www.business-standard.com/rss/markets-106.rss', category: 'Markets' },
+      { url: 'https://www.business-standard.com/rss/companies-101.rss', category: 'Companies' },
+      { url: 'https://www.business-standard.com/rss/economy-policy-102.rss', category: 'Economy' },
+      { url: 'https://www.business-standard.com/rss/finance-103.rss', category: 'Banking & Finance' }
+    ]
+  },
   {
     name: 'Bloomberg News',
     sitemaps: [],
     rssFeeds: [
       { url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Markets' },
       { url: 'https://feeds.bloomberg.com/technology/news.rss', category: 'Technology' },
-      { url: 'https://feeds.bloomberg.com/politics/news.rss', category: 'Politics' },
       { url: 'https://feeds.bloomberg.com/wealth/news.rss', category: 'Wealth' },
       { url: 'https://feeds.bloomberg.com/economics/news.rss', category: 'Economics' },
       { url: 'https://feeds.bloomberg.com/industries/news.rss', category: 'Industries' },
@@ -363,93 +735,62 @@ const NEWS_SOURCES = [
     ]
   },
   {
-    name: 'The Hindu',
-    sitemaps: [
-      'https://www.thehindu.com/sitemap/googlenews/all/all.xml',
-      'https://www.thehindu.com/sitemap/update/all.xml'
-    ],
+    name: 'Yahoo Finance',
+    sitemaps: [],
     rssFeeds: [
-      { url: 'https://www.thehindu.com/feeder/default.rss', category: 'Top News' },
-      { url: 'https://www.thehindu.com/news/national/feeder/default.rss', category: 'National' },
-      { url: 'https://www.thehindu.com/business/feeder/default.rss', category: 'Business' },
-      { url: 'https://www.thehindu.com/sport/feeder/default.rss', category: 'Sport' }
+      { url: 'https://finance.yahoo.com/news/rssindex', category: 'Markets' },
+      { url: 'https://finance.yahoo.com/rss/topstories', category: 'Top Stories' },
+      { url: 'https://finance.yahoo.com/news/rss/', category: 'Latest' }
+    ]
+  },
+  {
+    name: 'The Hindu',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://www.thehindu.com/business/feeder/default.rss', category: 'Business' }
     ]
   },
   {
     name: 'The Indian Express',
-    sitemaps: [
-      'https://indianexpress.com/news-sitemap.xml'
-    ],
+    sitemaps: [],
     rssFeeds: [
-      { url: 'https://indianexpress.com/feed/', category: 'National' }
+      { url: 'https://indianexpress.com/section/business/feed/', category: 'Business' }
     ]
   },
   {
     name: 'Hindustan Times',
-    sitemaps: [
-      'https://www.hindustantimes.com/sitemap/news.xml'
-    ],
+    sitemaps: [],
     rssFeeds: [
-      { url: 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml', category: 'National' },
-      { url: 'https://www.hindustantimes.com/feeds/rss/business/rssfeed.xml', category: 'Business' },
-      { url: 'https://www.hindustantimes.com/feeds/rss/sports/rssfeed.xml', category: 'Sports' }
+      { url: 'https://www.hindustantimes.com/feeds/rss/business/rssfeed.xml', category: 'Business' }
     ]
   },
   {
-    name: 'NDTV News',
+    name: 'NDTV Profit',
     sitemaps: [],
     rssFeeds: [
-      { url: 'https://feeds.feedburner.com/ndtvnews-top-stories', category: 'Top Stories' },
-      { url: 'https://feeds.feedburner.com/ndtvnews-latest', category: 'Latest' },
-      { url: 'https://feeds.feedburner.com/ndtvnews-india-news', category: 'National' },
-      { url: 'https://feeds.feedburner.com/ndtvnews-world-news', category: 'World' },
-      { url: 'https://feeds.feedburner.com/ndtvprofit-latest', category: 'Business' },
-      { url: 'https://feeds.feedburner.com/ndtvsports-cricket', category: 'Sports' }
-    ]
-  },
-  {
-    name: 'India Today',
-    sitemaps: [],
-    rssFeeds: [
-      { url: 'https://www.indiatoday.in/rss/home', category: 'Top News' },
-      { url: 'https://www.indiatoday.in/rss/1206584', category: 'National' },
-      { url: 'https://www.indiatoday.in/rss/1206577', category: 'World' },
-      { url: 'https://www.indiatoday.in/rss/1206550', category: 'Business' }
-    ]
-  },
-  {
-    name: 'BBC News',
-    sitemaps: [],
-    rssFeeds: [
-      { url: 'https://feeds.bbci.co.uk/news/rss.xml', category: 'World' },
-      { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', category: 'World' },
-      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', category: 'Business' }
-    ]
-  },
-  {
-    name: 'LiveMint',
-    sitemaps: [],
-    rssFeeds: [
-      { url: 'https://www.livemint.com/rss/news', category: 'Latest' },
-      { url: 'https://www.livemint.com/rss/markets', category: 'Markets' },
-      { url: 'https://www.livemint.com/rss/companies', category: 'Companies' }
+      { url: 'https://feeds.feedburner.com/ndtvprofit-latest', category: 'Business' }
     ]
   },
   {
     name: 'Times of India',
     sitemaps: [],
     rssFeeds: [
-      { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms', category: 'Top Stories' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/1898055.cms', category: 'Business' }
     ]
   },
   {
-    name: 'Aaj Tak',
+    name: 'BBC News',
     sitemaps: [],
     rssFeeds: [
-      { url: 'https://www.aajtak.in/rssfeeds/?id=home', category: 'Top News' },
-      { url: 'https://www.aajtak.in/rssfeeds/?id=national', category: 'National' },
-      { url: 'https://www.aajtak.in/rssfeeds/?id=business', category: 'Business' }
+      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', category: 'Business' }
+    ]
+  },
+
+  {
+    name: 'India Today',
+    sitemaps: [],
+    rssFeeds: [
+      { url: 'https://www.indiatoday.in/rss/1206550', category: 'Business' }
     ]
   }
 ];
@@ -621,13 +962,32 @@ async function crawlAllArticles(concurrency = 8) {
         const $ = cheerio.load(html);
         const host = new URL(vUrl).hostname.toLowerCase();
 
+        const pContainers = $(
+          'div.artText, div._s30J, div.story-details, div.storyDetails, div.articlebodycontent, ' +
+          'div.ins_storybody, div.caas-body, div[class*="related"], div[class*="recommend"], ' +
+          'div[class*="also-read"], div[class*="more-news"], div[class*="read-next"], article'
+        );
+
+        pContainers.find('a[href]').each((_, el) => {
+          try {
+            const raw = $(el).attr('href');
+            if (!raw || raw.startsWith('#') || raw.startsWith('javascript:')) return;
+            const abs = new URL(raw, vUrl).href.split('?')[0].split('#')[0];
+            if (isSameOrSupportedNetwork(abs, vUrl)) {
+              const normAbs = normalizeUrl(abs);
+              if (isRealStory(abs) && !scrapedHistory.has(normAbs) && !scrapedHistory.has(abs)) {
+                newDiscoveredSet.add(abs);
+              }
+            }
+          } catch(e) {}
+        });
+
         $('a[href]').each((_, el) => {
           try {
             const raw = $(el).attr('href');
             if (!raw || raw.startsWith('#') || raw.startsWith('javascript:')) return;
             const abs = new URL(raw, vUrl).href.split('?')[0].split('#')[0];
-            const absHost = new URL(abs).hostname.toLowerCase();
-            if (absHost.includes(host.replace('www.', '')) || host.includes(absHost.replace('www.', ''))) {
+            if (isSameOrSupportedNetwork(abs, vUrl)) {
               const normAbs = normalizeUrl(abs);
               if (isRealStory(abs) && !scrapedHistory.has(normAbs) && !scrapedHistory.has(abs)) {
                 newDiscoveredSet.add(abs);
@@ -644,7 +1004,24 @@ async function crawlAllArticles(concurrency = 8) {
     }
   }
 
-  console.log(`🚀 Starting download of ${unvisitedArticles.length} NEW articles...`);
+  // Pure Producer: Enqueue all discovered articles into the persistent queue
+  const newEnqueued = queueManager.enqueueLinks(unvisitedArticles);
+  queueManager.saveQueueSync();
+  const queueStats = queueManager.getQueueStats();
+
+  console.log(`\n==========================================================`);
+  console.log(`🎉 MULTI-SOURCE HARVEST COMPLETE!`);
+  console.log(`   ✨ New Articles Enqueued : +${newEnqueued}`);
+  console.log(`   📊 Queue Status          : ${queueStats.unopened} unopened | ${queueStats.opened} opened`);
+
+  const harvestOnly = process.argv.includes('--harvest-only');
+  if (harvestOnly) {
+    console.log(`   💡 Harvest-only mode active. 'queue_worker.js' will download these articles into Data/!`);
+    console.log(`==========================================================\n`);
+    return;
+  }
+
+  console.log(`   🚀 Direct Download Mode Active: Starting parallel multi-source workers...`);
   console.log(`==========================================================\n`);
 
   let savedCount = 0;
@@ -652,7 +1029,6 @@ async function crawlAllArticles(concurrency = 8) {
   let currentIndex = 0;
   const savedBySource = {};
   const seenInRun = new Set(unvisitedArticles);
-  const MAX_SPIDER_DISCOVERIES = 600;
   let spiderDiscoveredCount = 0;
 
   // Parallel Worker pool
@@ -669,37 +1045,36 @@ async function crawlAllArticles(concurrency = 8) {
         console.log(`${progress} ⏩ [SKIPPED] ${url.slice(0, 60)}`);
         skippedCount++;
       } else {
-          savedBySource[result.source] = (savedBySource[result.source] || 0) + 1;
+        savedBySource[result.source] = (savedBySource[result.source] || 0) + 1;
 
-          // Recursive Spidering: Enqueue newly discovered suggested links from the page
-          let spiderAdded = 0;
-          if (result.discoveredLinks && result.discoveredLinks.length > 0 && spiderDiscoveredCount < MAX_SPIDER_DISCOVERIES) {
-            for (const sugUrl of result.discoveredLinks) {
-              const normSug = normalizeUrl(sugUrl);
-              if (!scrapedHistory.has(normSug) && !scrapedHistory.has(sugUrl) && !seenInRun.has(sugUrl)) {
-                seenInRun.add(sugUrl);
-                unvisitedArticles.push(sugUrl);
-                spiderDiscoveredCount++;
-                spiderAdded++;
-                if (spiderDiscoveredCount >= MAX_SPIDER_DISCOVERIES) break;
-              }
+        // Recursive Spidering: Continuously enqueue newly discovered suggested links (Infinite mode)
+        let spiderAdded = 0;
+        if (result.discoveredLinks && result.discoveredLinks.length > 0) {
+          for (const sugUrl of result.discoveredLinks) {
+            const normSug = normalizeUrl(sugUrl);
+            if (!scrapedHistory.has(normSug) && !scrapedHistory.has(sugUrl) && !seenInRun.has(sugUrl)) {
+              seenInRun.add(sugUrl);
+              unvisitedArticles.push(sugUrl);
+              spiderDiscoveredCount++;
+              spiderAdded++;
             }
           }
-
-          const spiderBadge = spiderAdded > 0 ? ` 🕸️ (+${spiderAdded} related)` : '';
-          console.log(`${progress} ✅ [SAVED] [${result.source}] [${result.category}]: "${result.heading.slice(0, 36)}..." (${result.paragraphsCount} paras)${spiderBadge}`);
-          savedCount++;
         }
 
-        await sleep(100);
+        const spiderBadge = spiderAdded > 0 ? ` 🕸️ (+${spiderAdded} related)` : '';
+        console.log(`${progress} ✅ [SAVED] [${result.source}] [${result.category}]: "${result.heading.slice(0, 36)}..." (${result.paragraphsCount} paras)${spiderBadge}`);
+        savedCount++;
       }
-    }
 
-    const workers = Array.from({ length: concurrency }, (_, i) => worker(i + 1));
-    await Promise.all(workers);
+      await sleep(50);
+    }
+  }
+
+  const workers = Array.from({ length: concurrency }, (_, i) => worker(i + 1));
+  await Promise.all(workers);
 
   console.log(`\n==========================================================`);
-  console.log(`🎉 MULTI-SOURCE CRAWL COMPLETE!`);
+  console.log(`🎉 MULTI-SOURCE CRAWL WAVE COMPLETE!`);
   console.log(`   ✅ Newly Downloaded & Saved : ${savedCount}`);
   console.log(`   ⏩ Already Downloaded       : ${skippedCount}`);
   console.log(`   🕸️  Spider Deep Discoveries : ${spiderDiscoveredCount} related articles`);
@@ -710,23 +1085,55 @@ async function crawlAllArticles(concurrency = 8) {
       console.log(`      * ${srcName.padEnd(20)}: ${count} articles`);
     }
   } else {
-    console.log(`   ℹ️ No new articles found even after deep crawling.`);
+    console.log(`   ℹ️ No new articles found in this wave.`);
   }
   console.log(`==========================================================\n`);
 }
 
 // --------------------------------------------------------------------------
 // Start Script
-// Running 'node ref.js' automatically crawls ALL news websites together!
+// Running 'node ref.js' automatically crawls ALL news websites continuously!
 // --------------------------------------------------------------------------
-const target = process.argv[2];
+if (require.main === module) {
+  const target = process.argv[2];
 
-if (target && target.startsWith('http')) {
-  console.log(`\n📌 Single article mode detected: ${target}`);
-  scrapeSingleArticle(target).then(res => {
-    if (res) console.log(`✅ Saved: ${res.filename}.json`);
-  });
-} else {
-  // Master automatic run: All websites work together simultaneously!
-  crawlAllArticles(8);
+  if (target && target.startsWith('http')) {
+    console.log(`\n📌 Single article mode detected: ${target}`);
+    scrapeSingleArticle(target, null, true).then(res => {
+      if (res) console.log(`✅ Saved: ${res.filename}.json (${res.paragraphsCount} paras)`);
+    });
+  } else {
+    // Parse CLI concurrency if provided, default to 16 parallel streaming workers
+    let concurrency = 16;
+    for (let i = 0; i < process.argv.length; i++) {
+      if (process.argv[i] === '--concurrency' || process.argv[i] === '-c') {
+        concurrency = parseInt(process.argv[i + 1], 10) || concurrency;
+      }
+    }
+
+    // Master Continuous Infinite Crawler: Zero wait time between waves
+    (async () => {
+      let wave = 1;
+      while (true) {
+        console.log(`\n==========================================================`);
+        console.log(`🌀 STARTING CONTINUOUS CRAWL WAVE #${wave}`);
+        console.log(`==========================================================\n`);
+        await crawlAllArticles(concurrency);
+        console.log(`⚡ Wave #${wave} finished! Waiting 60s for financial publications to post fresh updates...\n`);
+        await sleep(60000);
+        wave++;
+      }
+    })();
+  }
 }
+
+module.exports = {
+  scrapeSingleArticle,
+  discoverAllNewsSources,
+  normalizeUrl,
+  recordInHistory,
+  isRealStory,
+  getSourceName,
+  isSameOrSupportedNetwork,
+  dataDir
+};
