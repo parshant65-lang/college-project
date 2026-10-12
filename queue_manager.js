@@ -492,3 +492,76 @@ module.exports = {
   recordInHistory,
   reloadQueue: loadQueue
 };
+
+// Interactive CLI Dashboard when executed directly via 'node queue_manager.js'
+if (require.main === module) {
+  const args = process.argv.slice(2);
+
+  // URL test mode: node queue_manager.js --test <url>
+  if (args[0] === '--test' && args[1]) {
+    const testUrl = args[1];
+    const norm = normalizeUrl(testUrl);
+    const valid = isRealStory(testUrl);
+    const src = getSourceName(testUrl);
+    const inHistory = isScraped(testUrl);
+
+    console.log(`\n==========================================================`);
+    console.log(`🔍 URL VALIDATION & FILTER TEST`);
+    console.log(`==========================================================`);
+    console.log(`   🔗 Input URL       : ${testUrl}`);
+    console.log(`   ✨ Normalized URL  : ${norm}`);
+    console.log(`   📰 Detected Source : ${src}`);
+    console.log(`   🛡️ Real Story Check: ${valid ? '✅ PASSED (Genuine Financial News)' : '❌ REJECTED (Filtered by Blacklist/Utility)'}`);
+    console.log(`   📜 In History      : ${inHistory ? '⚠️ Yes (Already scraped)' : '✅ No (Fresh link)'}`);
+    console.log(`==========================================================\n`);
+    process.exit(0);
+  }
+
+  const stats = getQueueStats();
+  console.log(`\n==========================================================`);
+  console.log(`🎯 MASTER QUEUE MANAGER DASHBOARD (Status: 🟢 HEALTHY)`);
+  console.log(`==========================================================`);
+  console.log(`📊 Queue Overview:`);
+  console.log(`   📁 Total URLs in Queue  : ${stats.total.toLocaleString()}`);
+  console.log(`   ⏳ Unopened (Pending)   : ${stats.unopened.toLocaleString()} articles`);
+  console.log(`   ✅ Opened (Completed)   : ${stats.opened.toLocaleString()} articles`);
+  console.log(`   📜 Scraped History      : ${scrapedHistory.size.toLocaleString()} URLs`);
+  console.log(`----------------------------------------------------------`);
+  console.log(`🌐 Pending Articles Distribution by News Publication:`);
+
+  const unopenedBySource = {};
+  for (const item of queue) {
+    if (item.status === 'unopened') {
+      const s = item.source || 'News';
+      unopenedBySource[s] = (unopenedBySource[s] || 0) + 1;
+    }
+  }
+
+  const sorted = Object.entries(unopenedBySource).sort((a, b) => b[1] - a[1]);
+  for (const [src, count] of sorted) {
+    console.log(`   ⚡ ${src.padEnd(26)}: ${count.toLocaleString()} pending`);
+  }
+
+  console.log(`----------------------------------------------------------`);
+  console.log(`🔎 Sample Next 3 URLs in Dispatch Queue:`);
+  const samplePointers = new Map(sourcePointers);
+  let sampleCount = 0;
+  for (const src of sourceNames) {
+    const list = sourceQueues.get(src) || [];
+    for (const item of list) {
+      if (item.status === 'unopened') {
+        console.log(`   [${sampleCount + 1}] [${item.source}] ${item.url}`);
+        sampleCount++;
+        break;
+      }
+    }
+    if (sampleCount >= 3) break;
+  }
+
+  console.log(`----------------------------------------------------------`);
+  console.log(`💡 How to run:`);
+  console.log(`   • Test a URL filter:        node queue_manager.js --test <url>`);
+  console.log(`   • Run Fast Scraper:         node queue_worker.js --concurrency 24`);
+  console.log(`   • Run Continuous Harvester: node ref.js --concurrency 16`);
+  console.log(`==========================================================\n`);
+}

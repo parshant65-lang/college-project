@@ -7,6 +7,7 @@
     "start": "node server.js",
     "scrape": "node --max-http-header-size=150000 ref.js",
     "worker": "node --max-http-header-size=150000 queue_worker.js",
+    "queue": "node queue_manager.js",
     "backup": "node backup.js",
     "push": "git add . && git commit -m \"Update scraped data\" && git push",
     "test": "echo \"Error: no test specified\" && exit 1"
